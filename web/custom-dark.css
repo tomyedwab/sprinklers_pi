@@ -1,0 +1,49 @@
+/* Dark mode support */
+
+.ui-page-theme-a,
+.ui-bar-a,
+.ui-page-theme-a .ui-bar-inherit,
+.ui-page-theme-a .ui-body-inherit {
+    background-color: #262626;
+    border-color: #333;
+    color: #c9c9c9;
+    text-shadow: 0 1px 0 #333;
+}
+
+.ui-page-theme-a .ui-btn,
+html .ui-bar-a .ui-btn,
+html .ui-body-a .ui-btn,
+html body .ui-group-theme-a .ui-btn,
+html head+body .ui-btn.ui-btn-a,
+.ui-page-theme-a .ui-btn:visited,
+html .ui-bar-a .ui-btn:visited,
+html .ui-body-a .ui-btn:visited,
+html body .ui-group-theme-a .ui-btn:visited,
+html head+body .ui-btn.ui-btn-a:visited {
+    background-color: #3d3d3d;
+    border-color: #333;
+    color: #c9c9c9;
+    text-shadow: 0 1px 0 #333;
+}
+
+.ui-page-theme-a .ui-btn:active,
+html .ui-bar-a .ui-btn:active,
+html .ui-body-a .ui-btn:active,
+html body .ui-group-theme-a .ui-btn:active,
+html head+body .ui-btn.ui-btn-a:active {
+    background-color: #646464;
+    border-color: #333;
+    color: #c9c9c9;
+    text-shadow: 0 1px 0 #333;
+}
+
+.ui-page-theme-a .ui-btn:hover,
+html .ui-bar-a .ui-btn:hover,
+html .ui-body-a .ui-btn:hover,
+html body .ui-group-theme-a .ui-btn:hover,
+html head+body .ui-btn.ui-btn-a:hover {
+    background-color: #4e4e4e;
+    border-color: #333;
+    color: #c9c9c9;
+    text-shadow: 0 1px 0 #333;
+}
