@@ -1,0 +1,23 @@
+{
+    "name": "Sprinklers",
+    "short_name": "Sprinklers",
+    "start_url": "/index.htm",
+    "background_color": "#ffffff",
+    "theme_color": "#b4b4b4",
+    "display": "standalone",
+    "description": "Sprinklers app for Yedwab family.",
+    "icons": [{
+        "src": "sprinkler.png",
+        "sizes": "32x32",
+        "type": "image/png"
+    }, {
+        "src": "sprinkler144.png",
+        "sizes": "144x144",
+        "type": "image/png"
+    }, {
+        "src": "sprinkler512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+    }]
+}
