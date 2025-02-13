@@ -1,0 +1,242 @@
+# Sprinklers Pi API Documentation
+
+## Overview
+The Sprinklers Pi system provides a RESTful API for controlling and monitoring the irrigation system. All endpoints use HTTP GET requests and return JSON responses unless otherwise specified.
+
+## Zone Management
+
+### Get Zones
+**Endpoint**: `/json/zones`  
+**Method**: GET  
+**Description**: Retrieves all configured zones and their current states.  
+**Response Structure**:
+```json
+{
+  "zones": [
+    {
+      "name": "string",      // Zone name (up to 19 chars)
+      "enabled": "on|off",   // Zone enabled status
+      "state": "on|off",     // Current running state
+      "pump": "on|off"       // Pump association
+    }
+  ]
+}
+```
+**Possible Errors**:
+- Communications failure
+
+### Set Zones
+**Endpoint**: `/bin/setZones`  
+**Method**: GET  
+**Parameters**:
+- `z{a-z}name`: Zone name (string, max 19 chars)
+- `z{a-z}e`: Zone enabled status ("on"/"off")
+- `z{a-z}p`: Pump setting ("on"/"off")
+
+Where {a-z} represents the zone ID (a=1, b=2, etc.)
+
+## Schedule Management
+
+### Get All Schedules
+**Endpoint**: `/json/schedules`  
+**Method**: GET  
+**Response Structure**:
+```json
+{
+  "Table": [
+    {
+      "id": "number",        // Schedule ID
+      "name": "string",      // Schedule name
+      "e": "on|off",        // Enabled status
+      "next": "string"      // Next run time description
+    }
+  ]
+}
+```
+
+### Get Schedule Details
+**Endpoint**: `/json/schedule`  
+**Method**: GET  
+**Parameters**:
+- `id`: Schedule ID (number)  
+**Response Structure**:
+```json
+{
+  "name": "string",         // Schedule name
+  "enabled": "on|off",      // Schedule enabled status
+  "type": "on|off",        // Day-based (on) or Interval-based (off)
+  "interval": "number",     // Days between runs (1-20)
+  "restrict": "0|1|2",     // 0=None, 1=Odd days, 2=Even days
+  "d1": "on|off",          // Sunday enabled
+  "d2": "on|off",          // Monday enabled
+  "d3": "on|off",          // Tuesday enabled
+  "d4": "on|off",          // Wednesday enabled
+  "d5": "on|off",          // Thursday enabled
+  "d6": "on|off",          // Friday enabled
+  "d7": "on|off",          // Saturday enabled
+  "times": [
+    {
+      "t": "string",       // Time in HH:MM format
+      "e": "on|off"        // Time slot enabled
+    }
+  ],
+  "zones": [
+    {
+      "duration": "number", // Run time in minutes (0-255)
+      "e": "on|off"        // Zone enabled in schedule
+    }
+  ]
+}
+```
+
+### Set Schedule
+**Endpoint**: `/bin/setSched`  
+**Method**: GET  
+**Parameters**:
+- `id`: Schedule ID (-1 for new)
+- `name`: Schedule name
+- `enable`: Schedule enabled ("on"/"off")
+- `type`: Schedule type ("on"=Day-based, "off"=Interval)
+- `interval`: Days between runs (1-20)
+- `restrict`: Day restrictions (0=None, 1=Odd, 2=Even)
+- `d1`-`d7`: Day enabled status ("on"/"off")
+- `t1`-`t3`: Start times (HH:MM)
+- `e1`-`e3`: Time slot enabled ("on"/"off")
+- `z{a-z}`: Zone duration (0-255 minutes)
+
+### Delete Schedule
+**Endpoint**: `/bin/delSched`  
+**Method**: GET  
+**Parameters**:
+- `id`: Schedule ID to delete
+
+## Manual Control
+
+### Manual Zone Control
+**Endpoint**: `/bin/manual`  
+**Method**: GET  
+**Parameters**:
+- `zone`: Zone ID (za-zz)
+- `state`: Desired state ("on"/"off")
+
+### Quick Schedule
+**Endpoint**: `/bin/setQSched`  
+**Method**: GET  
+**Parameters**:
+- `sched`: Schedule ID or "-1" for custom
+- `z{a-z}`: Zone duration for custom schedule (0-255 minutes)
+
+## System Settings
+
+### Get Settings
+**Endpoint**: `/json/settings`  
+**Method**: GET  
+**Response Structure**:
+```json
+{
+  "ip": "string",          // System IP address
+  "netmask": "string",     // Network mask
+  "gateway": "string",     // Network gateway
+  "webport": "number",     // Web interface port
+  "apikey": "string",      // Weather API key
+  "wutype": "zip|pws",    // Weather location type
+  "zip": "string",        // ZIP code (if wutype=zip)
+  "pws": "string",        // PWS ID (if wutype=pws)
+  "NTPip": "string",      // NTP server IP
+  "NTPoffset": "number",  // Timezone offset
+  "sadj": "number",       // Seasonal adjustment (0-200)
+  "ot": "0|1|2|3"        // Output type
+}
+```
+
+### Save Settings
+**Endpoint**: `/bin/settings`  
+**Method**: GET  
+**Parameters**: All fields from settings structure above
+
+## Weather Integration
+
+### Weather Check
+**Endpoint**: `/json/wcheck`  
+**Method**: GET  
+**Response Structure**:
+```json
+{
+  "noprovider": "true|false",    // No weather provider configured
+  "keynotfound": "true|false",   // Invalid API key
+  "valid": "true|false",         // Valid weather data
+  "resolvedIP": "string",        // Weather service IP
+  "scale": "number",             // Weather adjustment %
+  "meantempi": "number",         // Mean temperature (F)
+  "minhumidity": "number",       // Min humidity %
+  "maxhumidity": "number",       // Max humidity %
+  "precip": "number",            // Yesterday's precipitation
+  "precip_today": "number",      // Today's precipitation
+  "wind_mph": "number",          // Wind speed
+  "UV": "number"                 // UV index (x10)
+}
+```
+
+## System Maintenance
+
+### System Reset
+**Endpoint**: `/bin/reset`  
+**Method**: GET  
+**Description**: Restarts all services while maintaining settings
+
+### Factory Reset
+**Endpoint**: `/bin/factory`  
+**Method**: GET  
+**Description**: Resets all settings to factory defaults
+
+### Chatter Box
+**Endpoint**: `/bin/chatter`  
+**Method**: GET  
+**Parameters**:
+- `zone`: Zone ID to test
+- `state`: Test state
+
+## Logging
+
+### Graph Data
+**Endpoint**: `/json/logs`  
+**Method**: GET  
+**Parameters**:
+- `sdate`: Start timestamp
+- `edate`: End timestamp
+- `g`: Grouping (h=Hour, d=DOW, m=Month, n=None)
+
+### Table Data
+**Endpoint**: `/json/tlogs`  
+**Method**: GET  
+**Parameters**:
+- `sdate`: Start timestamp
+- `edate`: End timestamp
+
+**Response Structure**:
+```json
+{
+  "logs": [
+    {
+      "zone": "number",          // Zone number
+      "entries": [
+        {
+          "date": "number",      // Unix timestamp
+          "duration": "number",   // Run duration (seconds)
+          "schedule": "number",   // Schedule ID (-1=Manual, 100=Quick)
+          "seasonal": "number",   // Seasonal adjustment %
+          "wunderground": "number" // Weather adjustment %
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Error Handling
+All endpoints may return HTTP error codes:
+- 400: Bad Request (invalid parameters)
+- 404: Not Found
+- 500: Internal Server Error
+
+JSON responses may include error details in the response body. 
