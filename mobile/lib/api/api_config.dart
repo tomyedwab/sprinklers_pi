@@ -9,6 +9,7 @@ class ApiConfig {
   
   /// API endpoints
   static const String zones = '/json/zones';
+  static const String state = '/json/state';
   static const String setZones = '/bin/setZones';
   static const String schedules = '/json/schedules';
   static const String schedule = '/json/schedule';

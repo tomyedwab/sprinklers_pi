@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'zone_provider.dart';
+part of 'system_state_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$zonesNotifierHash() => r'332fa1f1cc36241dedf6e2eeb3e54009b78a6786';
+String _$systemStateNotifierHash() =>
+    r'edcf8e9452a779413ec8615fac4f73dca44862cf';
 
-/// See also [ZonesNotifier].
-@ProviderFor(ZonesNotifier)
-final zonesNotifierProvider =
-    AutoDisposeAsyncNotifierProvider<ZonesNotifier, List<Zone>>.internal(
-  ZonesNotifier.new,
-  name: r'zonesNotifierProvider',
+/// See also [SystemStateNotifier].
+@ProviderFor(SystemStateNotifier)
+final systemStateNotifierProvider =
+    AutoDisposeAsyncNotifierProvider<SystemStateNotifier, SystemState>.internal(
+  SystemStateNotifier.new,
+  name: r'systemStateNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$zonesNotifierHash,
+      : _$systemStateNotifierHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ZonesNotifier = AutoDisposeAsyncNotifier<List<Zone>>;
+typedef _$SystemStateNotifier = AutoDisposeAsyncNotifier<SystemState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

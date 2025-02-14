@@ -154,6 +154,24 @@ Where {a-z} represents the zone ID (a=1, b=2, etc.)
 **Method**: GET  
 **Parameters**: All fields from settings structure above
 
+### Get System State
+**Endpoint**: `/json/state`  
+**Method**: GET  
+**Description**: Retrieves the current system state including version, running status, and active zone information.  
+**Response Structure**:
+```json
+{
+  "version": "string",       // System version
+  "run": "on|off",          // Schedule running status
+  "zones": "number",        // Number of enabled zones
+  "schedules": "number",    // Number of schedules
+  "timenow": "number",      // Current Unix timestamp
+  "events": "number",       // Number of events
+  "onzone": "string",       // Currently active zone name (if any)
+  "offtime": "number"       // Seconds until current zone turns off (99999 for manual)
+}
+```
+
 ## Weather Integration
 
 ### Weather Check

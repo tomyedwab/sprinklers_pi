@@ -1,0 +1,184 @@
+---
+description: Implementing new client-side API providers and models
+globs: *.dart
+---
+
+# API Client and Models Implementation Guide
+
+## Directory Structure
+```
+lib/
+  ├── api/
+  │   ├── api_client.dart     # Central HTTP client
+  │   ├── api_config.dart     # API endpoints and configuration
+  │   └── models/            # API models that directly map to JSON responses
+  │       ├── zone.dart
+  │       └── system_state.dart
+  └── models/               # Application models with business logic
+      ├── zone.dart
+      └── system_state.dart
+```
+
+## API Models (lib/api/models/)
+
+API models should be simple and directly map to API responses:
+
+1. Use plain Dart classes (not freezed)
+2. Include only fields that exist in the API response
+3. Use exact field names from the API
+4. Implement `fromJson` and `toJson` methods
+5. Keep logic to a minimum
+
+Example:
+```dart
+class ApiSystemState {
+  final String version;
+  final String run;        // Keep original API field names
+  final int zones;
+  final int schedules;
+  final int timenow;       // Even if not ideal naming
+  final String? onzone;    // Optional fields are nullable
+  final int? offtime;
+
+  ApiSystemState({
+    required this.version,
+    required this.run,
+    required this.zones,
+    required this.schedules,
+    required this.timenow,
+    this.onzone,
+    this.offtime,
+  });
+
+  factory ApiSystemState.fromJson(Map<String, dynamic> json) {
+    return ApiSystemState(
+      version: json['version'] as String,
+      run: json['run'] as String,
+      // ... other fields
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'version': version,
+    'run': run,
+    // ... other fields
+  };
+}
+```
+
+## Application Models (lib/models/)
+
+Application models provide a clean interface for the rest of the app:
+
+1. Use freezed for immutability when needed
+2. Use proper Dart naming conventions
+3. Add computed properties and methods
+4. Convert API types to more appropriate Dart types
+5. Include business logic
+
+Example:
+```dart
+@freezed
+class SystemState with _$SystemState {
+  const factory SystemState({
+    required String version,
+    required bool isRunning,          // Convert 'on'/'off' to bool
+    required int enabledZonesCount,   // Better naming
+    required DateTime currentTime,     // Convert timestamp to DateTime
+    required Duration? remainingTime, // Convert seconds to Duration
+  }) = _SystemState;
+}
+```
+
+## API Client (lib/api/api_client.dart)
+
+The API client should:
+
+1. Only work with API models
+2. Handle all HTTP communication
+3. Include proper error handling
+4. Use typed responses
+5. Document all methods
+
+Example:
+```dart
+class ApiClient {
+  Future<ApiSystemState> getSystemState() async {
+    try {
+      final response = await _get(ApiConfig.state);
+      return ApiSystemState.fromJson(response);
+    } catch (e) {
+      throw ApiException('Failed to get system state: $e');
+    }
+  }
+}
+```
+
+## Providers
+
+Providers handle the conversion between API and application models:
+
+1. Use the API client to fetch data
+2. Convert API models to application models
+3. Handle loading and error states
+4. Provide refresh methods
+5. Cache data when appropriate
+
+Example:
+```dart
+@riverpod
+class SystemStateNotifier extends _$SystemStateNotifier {
+  Future<SystemState> build() async {
+    final apiState = await ref.read(apiClientProvider).getSystemState();
+    return SystemState(
+      version: apiState.version,
+      isRunning: apiState.run == 'on',
+      currentTime: DateTime.fromMillisecondsSinceEpoch(apiState.timenow * 1000),
+      // ... convert other fields
+    );
+  }
+}
+```
+
+## Best Practices
+
+1. **Separation of Concerns**
+   - API models only handle serialization
+   - Application models handle business logic
+   - API client handles HTTP communication
+   - Providers handle state management and conversion
+
+2. **Error Handling**
+   - Use custom ApiException class
+   - Include HTTP status codes when available
+   - Provide meaningful error messages
+   - Handle network errors gracefully
+
+3. **Type Safety**
+   - Use strong types everywhere
+   - Avoid dynamic when possible
+   - Document expected types in comments
+   - Use nullable types appropriately
+
+4. **Testing**
+   - Mock API responses for testing
+   - Test both API and application models
+   - Include error case testing
+   - Test model conversions
+
+5. **Documentation**
+   - Document all public APIs
+   - Include example usage
+   - Document any assumptions
+   - Keep documentation up to date
+
+## Adding New Endpoints
+
+When adding a new endpoint:
+
+1. Add the endpoint URL to `api_config.dart`
+2. Create the API model in `lib/api/models/`
+3. Create the application model in `lib/models/`
+4. Add the API method to `ApiClient`
+5. Create a provider for state management
+6. Add tests for all new code

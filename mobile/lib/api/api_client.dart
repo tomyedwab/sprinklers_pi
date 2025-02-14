@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
 import 'models/zone.dart';
+import 'models/system_state.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -52,22 +53,21 @@ class ApiClient {
     try {
       final response = await _get(ApiConfig.zones);
       final List<dynamic> zonesJson = response['zones'] as List<dynamic>;
-      return zonesJson.asMap().entries.map((entry) {
-        final zone = Zone.fromJson(entry.value as Map<String, dynamic>);
-        // Set the ID based on array position (1-based index)
-        return Zone(
-          id: entry.key + 1,
-          name: zone.name,
-          isEnabled: zone.isEnabled,
-          isRunning: zone.isRunning,
-          isPumpAssociated: zone.isPumpAssociated,
-          wateringTime: zone.wateringTime,
-          description: zone.description,
-        );
-      }).toList();
+      return zonesJson.map((json) => Zone.fromJson(json as Map<String, dynamic>)).toList();
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to get zones: ${e.toString()}');
+    }
+  }
+
+  /// Get system state
+  Future<ApiSystemState> getSystemState() async {
+    try {
+      final response = await _get(ApiConfig.state);
+      return ApiSystemState.fromJson(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to get system state: ${e.toString()}');
     }
   }
 
