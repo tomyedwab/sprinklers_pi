@@ -28,6 +28,8 @@ API models should be simple and directly map to API responses:
 3. Use exact field names from the API
 4. Implement `fromJson` and `toJson` methods
 5. Keep logic to a minimum
+6. Create separate models for list responses vs detail responses when they differ
+7. Group related sub-models (like schedule times and zones) in the same file
 
 Example:
 ```dart
@@ -75,6 +77,9 @@ Application models provide a clean interface for the rest of the app:
 3. Add computed properties and methods
 4. Convert API types to more appropriate Dart types
 5. Include business logic
+6. Use enums for fixed value sets
+7. Add extension methods for API model conversion
+8. Include helper methods for common operations
 
 Example:
 ```dart
@@ -87,6 +92,22 @@ class SystemState with _$SystemState {
     required DateTime currentTime,     // Convert timestamp to DateTime
     required Duration? remainingTime, // Convert seconds to Duration
   }) = _SystemState;
+
+  const SystemState._();  // Add this to include non-freezed methods
+
+  // Add computed properties
+  bool get isActive => isRunning && remainingTime != null;
+}
+
+// Add extension for API conversion
+extension ApiSystemStateX on SystemState {
+  static SystemState fromApiModel(ApiSystemState api) {
+    return SystemState(
+      version: api.version,
+      isRunning: api.run == 'on',
+      // ... convert other fields
+    );
+  }
 }
 ```
 
@@ -99,16 +120,32 @@ The API client should:
 3. Include proper error handling
 4. Use typed responses
 5. Document all methods
+6. Use prefixes when importing application models to avoid naming conflicts
+7. Keep parameter conversion logic in the client (e.g., converting IDs to letters)
+8. Group related endpoints together
 
 Example:
 ```dart
+import '../models/schedule.dart' as app_model;
+
 class ApiClient {
-  Future<ApiSystemState> getSystemState() async {
+  /// Get schedule details by ID
+  Future<ApiSchedule> getSchedule(int id) async {
     try {
-      final response = await _get(ApiConfig.state);
-      return ApiSystemState.fromJson(response);
+      final response = await _get(ApiConfig.schedule, {'id': id});
+      return ApiSchedule.fromJson(response);
     } catch (e) {
-      throw ApiException('Failed to get system state: $e');
+      throw ApiException('Failed to get schedule: $e');
+    }
+  }
+
+  /// Update or create a schedule
+  Future<void> saveSchedule(app_model.Schedule schedule) async {
+    try {
+      final params = _convertScheduleToParams(schedule);
+      await _get(ApiConfig.setSchedule, params);
+    } catch (e) {
+      throw ApiException('Failed to save schedule: $e');
     }
   }
 }
@@ -123,19 +160,26 @@ Providers handle the conversion between API and application models:
 3. Handle loading and error states
 4. Provide refresh methods
 5. Cache data when appropriate
+6. Use extension methods for model conversion
+7. Handle list and detail views separately
+8. Maintain data consistency across providers
 
 Example:
 ```dart
 @riverpod
-class SystemStateNotifier extends _$SystemStateNotifier {
-  Future<SystemState> build() async {
-    final apiState = await ref.read(apiClientProvider).getSystemState();
-    return SystemState(
-      version: apiState.version,
-      isRunning: apiState.run == 'on',
-      currentTime: DateTime.fromMillisecondsSinceEpoch(apiState.timenow * 1000),
-      // ... convert other fields
-    );
+class ScheduleListNotifier extends _$ScheduleListNotifier {
+  Future<List<Schedule>> build() async {
+    final apiClient = ref.watch(apiClientProvider);
+    final scheduleList = await apiClient.getSchedules();
+    return scheduleList.map(ApiScheduleX.fromApiListItem).toList();
+  }
+
+  Future<Schedule> getScheduleDetails(int id) async {
+    final apiClient = ref.read(apiClientProvider);
+    final apiSchedule = await apiClient.getSchedule(id);
+    final listItem = (await future).firstWhere((s) => s.id == id);
+    return ApiScheduleX.fromApiSchedule(id, apiSchedule, 
+      nextRun: listItem.nextRun);
   }
 }
 ```
@@ -172,6 +216,18 @@ class SystemStateNotifier extends _$SystemStateNotifier {
    - Document any assumptions
    - Keep documentation up to date
 
+6. **Model Conversion**
+   - Use extension methods for clarity
+   - Keep conversion logic in one place
+   - Handle partial data gracefully
+   - Preserve important fields during conversion
+
+7. **API Response Handling**
+   - Create separate models for list vs detail responses
+   - Handle optional fields appropriately
+   - Convert string enums to proper Dart enums
+   - Use consistent naming conventions
+
 ## Adding New Endpoints
 
 When adding a new endpoint:
@@ -182,3 +238,5 @@ When adding a new endpoint:
 4. Add the API method to `ApiClient`
 5. Create a provider for state management
 6. Add tests for all new code
+7. Document any special handling or assumptions
+8. Consider the impact on existing providers

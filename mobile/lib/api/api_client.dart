@@ -1,8 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'api_config.dart';
 import 'models/zone.dart';
 import 'models/system_state.dart';
+import 'models/schedule.dart';
+import '../models/schedule.dart' as app_model;
+
+part 'api_client.g.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -104,4 +109,81 @@ class ApiClient {
       throw ApiException('Failed to update zone: ${e.toString()}');
     }
   }
+
+  /// Get all schedules
+  Future<List<ApiScheduleListItem>> getSchedules() async {
+    try {
+      final response = await _get(ApiConfig.schedules);
+      return ApiScheduleList.fromJson(response).table;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to get schedules: ${e.toString()}');
+    }
+  }
+
+  /// Get schedule details by ID
+  Future<ApiScheduleDetail> getSchedule(int id) async {
+    try {
+      final response = await _get(ApiConfig.schedule, {'id': id});
+      return ApiScheduleDetail.fromJson(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to get schedule: ${e.toString()}');
+    }
+  }
+
+  /// Delete a schedule
+  Future<void> deleteSchedule(int id) async {
+    try {
+      await _get(ApiConfig.deleteSchedule, {'id': id});
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to delete schedule: ${e.toString()}');
+    }
+  }
+
+  /// Update or create a schedule
+  Future<void> saveSchedule(app_model.Schedule schedule) async {
+    try {
+      final params = {
+        'id': schedule.id,
+        'name': schedule.name,
+        'enable': schedule.isEnabled ? 'on' : 'off',
+        'type': schedule.isDayBased ? 'on' : 'off',
+        'interval': schedule.interval,
+        'restrict': schedule.restriction.value,
+        'd1': schedule.isSundayEnabled ? 'on' : 'off',
+        'd2': schedule.isMondayEnabled ? 'on' : 'off',
+        'd3': schedule.isTuesdayEnabled ? 'on' : 'off',
+        'd4': schedule.isWednesdayEnabled ? 'on' : 'off',
+        'd5': schedule.isThursdayEnabled ? 'on' : 'off',
+        'd6': schedule.isFridayEnabled ? 'on' : 'off',
+        'd7': schedule.isSaturdayEnabled ? 'on' : 'off',
+      };
+
+      // Add time slots
+      for (var i = 0; i < schedule.times.length; i++) {
+        final time = schedule.times[i];
+        params['t${i + 1}'] = time.time;
+        params['e${i + 1}'] = time.isEnabled ? 'on' : 'off';
+      }
+
+      // Add zone durations
+      for (var i = 0; i < schedule.zones.length; i++) {
+        final zone = schedule.zones[i];
+        final zoneId = String.fromCharCode(97 + i); // Convert 0 to 'a', 1 to 'b', etc.
+        params['z$zoneId'] = zone.duration.inMinutes;
+      }
+
+      await _get(ApiConfig.setSchedule, params);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to save schedule: ${e.toString()}');
+    }
+  }
+}
+
+@riverpod
+ApiClient apiClient(ApiClientRef ref) {
+  return ApiClient();
 } 

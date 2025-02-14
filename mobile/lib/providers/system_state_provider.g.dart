@@ -7,7 +7,7 @@ part of 'system_state_provider.dart';
 // **************************************************************************
 
 String _$systemStateNotifierHash() =>
-    r'edcf8e9452a779413ec8615fac4f73dca44862cf';
+    r'05b70453cee3521fed2ac5a930cd9b2032f18a99';
 
 /// See also [SystemStateNotifier].
 @ProviderFor(SystemStateNotifier)

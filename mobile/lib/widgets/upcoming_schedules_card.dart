@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/schedule_provider.dart';
+import '../models/schedule.dart';
 
 class UpcomingSchedulesCard extends ConsumerWidget {
   const UpcomingSchedulesCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Connect to actual schedule provider
-    final upcomingSchedules = [
-      _ScheduleItem(
-        zoneName: 'Front Lawn',
-        time: DateTime.now().add(const Duration(hours: 2)),
-        duration: const Duration(minutes: 20),
-      ),
-      _ScheduleItem(
-        zoneName: 'Back Garden',
-        time: DateTime.now().add(const Duration(hours: 4)),
-        duration: const Duration(minutes: 15),
-      ),
-    ];
+    final schedulesAsync = ref.watch(scheduleListNotifierProvider);
 
     return Card(
       child: Padding(
@@ -45,36 +35,73 @@ class UpcomingSchedulesCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            if (upcomingSchedules.isEmpty)
-              const Center(
+            schedulesAsync.when(
+              loading: () => const Center(
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (error, stackTrace) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    'No upcoming schedules',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
+                    'Error loading schedules: $error',
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: upcomingSchedules.length,
-                separatorBuilder: (context, index) => const Divider(),
-                itemBuilder: (context, index) {
-                  final schedule = upcomingSchedules[index];
-                  return _buildScheduleItem(schedule);
-                },
               ),
+              data: (schedules) {
+                if (schedules.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'No upcoming schedules',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+
+                // Filter enabled schedules with next run time
+                final upcomingSchedules = schedules
+                    .where((s) => s.isEnabled && s.nextRun != null)
+                    .toList();
+
+                if (upcomingSchedules.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'No upcoming schedules',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+
+                final displaySchedules = upcomingSchedules.take(3).toList();
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: displaySchedules.length,
+                  separatorBuilder: (context, index) => const Divider(),
+                  itemBuilder: (context, index) {
+                    final schedule = displaySchedules[index];
+                    return _buildScheduleItem(schedule);
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildScheduleItem(_ScheduleItem schedule) {
+  Widget _buildScheduleItem(Schedule schedule) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -86,63 +113,24 @@ class UpcomingSchedulesCard extends ConsumerWidget {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  schedule.zoneName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Duration: ${schedule.duration.inMinutes} minutes',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
+            child: Text(
+              schedule.name,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          Text(
-            _formatTime(schedule.time),
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          if (schedule.nextRun != null)
+            Text(
+              schedule.nextRun!,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
         ],
       ),
     );
   }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final scheduleDate = DateTime(time.year, time.month, time.day);
-
-    if (scheduleDate == today) {
-      return 'Today ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-    } else if (scheduleDate == tomorrow) {
-      return 'Tomorrow ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-    } else {
-      return '${time.month}/${time.day} ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-    }
-  }
-}
-
-class _ScheduleItem {
-  final String zoneName;
-  final DateTime time;
-  final Duration duration;
-
-  const _ScheduleItem({
-    required this.zoneName,
-    required this.time,
-    required this.duration,
-  });
 } 
