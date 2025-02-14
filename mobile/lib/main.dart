@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'providers/zone_provider.dart';
+import 'navigation/app_router.dart';
+import 'navigation/route_parser.dart';
+import 'widgets/bottom_nav_bar.dart';
 
 void main() {
   runApp(
@@ -10,56 +12,36 @@ void main() {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'Sprinklers Pi',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      routerDelegate: AppRouterDelegate(ref),
+      routeInformationParser: AppRouteInformationParser(),
     );
   }
 }
 
-class HomePage extends ConsumerWidget {
-  const HomePage({super.key});
+class MainScreen extends ConsumerWidget {
+  const MainScreen({super.key, required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final zonesAsync = ref.watch(zonesNotifierProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sprinklers Pi'),
       ),
-      body: zonesAsync.when(
-        data: (zones) => ListView.builder(
-          itemCount: zones.length,
-          itemBuilder: (context, index) {
-            final zone = zones[index];
-            return ListTile(
-              title: Text(zone.name),
-              subtitle: Text(zone.description ?? ''),
-              trailing: Switch(
-                value: zone.isEnabled,
-                onChanged: (value) {
-                  ref.read(zonesNotifierProvider.notifier)
-                     .toggleZone(zone.id, value);
-                },
-              ),
-            );
-          },
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('Error: $error'),
-        ),
-      ),
+      body: child,
+      bottomNavigationBar: const AppBottomNavBar(),
     );
   }
 }
