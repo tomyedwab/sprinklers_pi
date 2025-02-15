@@ -2,7 +2,7 @@ class Zone {
   final int id;
   final String name;
   final bool isEnabled;
-  final bool isRunning;
+  final bool state;
   final bool isPumpAssociated;
   final int wateringTime;
   final String? description;
@@ -11,7 +11,7 @@ class Zone {
     required this.id,
     required this.name,
     required this.isEnabled,
-    required this.isRunning,
+    required this.state,
     this.isPumpAssociated = false,
     this.wateringTime = 0,
     this.description,
@@ -23,7 +23,7 @@ class Zone {
       id: 0, // This will be set by the API client based on array position
       name: json['name'] as String,
       isEnabled: json['enabled'] == 'on',
-      isRunning: json['state'] == 'on',
+      state: json['state'] == 'on',
       isPumpAssociated: json['pump'] == 'on',
     );
   }
@@ -31,7 +31,7 @@ class Zone {
   Map<String, dynamic> toJson() => {
     'name': name,
     'enabled': isEnabled ? 'on' : 'off',
-    'state': isRunning ? 'on' : 'off',
+    'state': state ? 'on' : 'off',
     'pump': isPumpAssociated ? 'on' : 'off',
   };
 } 

@@ -39,7 +39,7 @@ class ActiveZoneCard extends ConsumerWidget {
         ),
       ),
       data: (zones) {
-        final activeZone = zones.where((z) => z.isRunning).firstOrNull;
+        final activeZone = zones.where((z) => z.state).firstOrNull;
 
         if (activeZone == null) {
           return Card(
