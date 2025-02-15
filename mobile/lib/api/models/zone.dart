@@ -34,4 +34,24 @@ class Zone {
     'state': state ? 'on' : 'off',
     'pump': isPumpAssociated ? 'on' : 'off',
   };
+
+  Zone copyWith({
+    int? id,
+    String? name,
+    bool? isEnabled,
+    bool? state,
+    bool? isPumpAssociated,
+    int? wateringTime,
+    String? description,
+  }) {
+    return Zone(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      isEnabled: isEnabled ?? this.isEnabled,
+      state: state ?? this.state,
+      isPumpAssociated: isPumpAssociated ?? this.isPumpAssociated,
+      wateringTime: wateringTime ?? this.wateringTime,
+      description: description ?? this.description,
+    );
+  }
 } 

@@ -25,6 +25,9 @@ class ApiClient {
 
   ApiClient({http.Client? client}) : _client = client ?? http.Client();
 
+  /// Converts a zero-based zone ID to its API zone name (0 -> 'b', 1 -> 'c', etc.)
+  String _zoneIdToName(int id) => String.fromCharCode(98 + id);
+
   /// Helper method to build URLs
   Uri _buildUrl(String endpoint, [Map<String, dynamic>? queryParams]) {
     final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
@@ -44,6 +47,10 @@ class ApiClient {
           .timeout(ApiConfig.timeout);
 
       if (response.statusCode == 200) {
+        // Handle empty responses (like from setZones)
+        if (response.body.isEmpty) {
+          return {};
+        }
         return json.decode(response.body) as Map<String, dynamic>;
       } else {
         throw ApiException('Request failed', response.statusCode);
@@ -59,7 +66,10 @@ class ApiClient {
     try {
       final response = await _get(ApiConfig.zones);
       final List<dynamic> zonesJson = response['zones'] as List<dynamic>;
-      return zonesJson.map((json) => Zone.fromJson(json as Map<String, dynamic>)).toList();
+      return zonesJson.asMap().entries.map((entry) {
+        final json = entry.value as Map<String, dynamic>;
+        return Zone.fromJson(json).copyWith(id: entry.key); // Use 0-based index directly
+      }).toList();
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to get zones: ${e.toString()}');
@@ -83,7 +93,7 @@ class ApiClient {
       await _get(
         ApiConfig.manualControl,
         {
-          'zone': 'z${String.fromCharCode(96 + zoneId)}',  // Convert 1 to 'za', 2 to 'zb', etc.
+          'zone': 'z${_zoneIdToName(zoneId)}',  // Convert 0 to 'zb', 1 to 'zc', etc.
           'state': enable ? 'on' : 'off',
         },
       );
@@ -96,15 +106,26 @@ class ApiClient {
   /// Update zone settings
   Future<void> updateZone(Zone zone) async {
     try {
-      final zoneId = String.fromCharCode(96 + zone.id); // Convert 1 to 'a', 2 to 'b', etc.
-      await _get(
-        ApiConfig.setZones,
-        {
-          'z${zoneId}name': zone.name,
-          'z${zoneId}e': zone.isEnabled ? 'on' : 'off',
-          'z${zoneId}p': zone.isPumpAssociated ? 'on' : 'off',
-        },
-      );
+      // First get all current zones
+      final zones = await getZones();
+      
+      // Create parameters for all zones
+      final params = <String, String>{};
+      for (final z in zones) {
+        final zoneId = _zoneIdToName(z.id);
+        // Use the updated values for the zone being modified, otherwise use existing values
+        if (z.id == zone.id) {
+          params['z${zoneId}name'] = zone.name;
+          params['z${zoneId}e'] = zone.isEnabled ? 'on' : 'off';
+          params['z${zoneId}p'] = zone.isPumpAssociated ? 'on' : 'off';
+        } else {
+          params['z${zoneId}name'] = z.name;
+          params['z${zoneId}e'] = z.isEnabled ? 'on' : 'off';
+          params['z${zoneId}p'] = z.isPumpAssociated ? 'on' : 'off';
+        }
+      }
+
+      await _get(ApiConfig.setZones, params);
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to update zone: ${e.toString()}');
@@ -172,7 +193,7 @@ class ApiClient {
       // Add zone durations
       for (var i = 0; i < schedule.zones.length; i++) {
         final zone = schedule.zones[i];
-        final zoneId = String.fromCharCode(97 + i); // Convert 0 to 'a', 1 to 'b', etc.
+        final zoneId = _zoneIdToName(i);
         params['z$zoneId'] = zone.duration.inMinutes;
       }
 

@@ -229,6 +229,13 @@ Completed zone editing functionality (FLUTTER-302):
   - Added visual indicators for disabled zones
   - Integrated edit modal with pencil icon
   - Improved layout and accessibility
+- Fixed critical bugs in zone management:
+  - Zone IDs were not being set correctly in API client
+  - Changed to 0-based zone IDs throughout the app
+  - Added proper array position to ID mapping in getZones method
+  - Added copyWith support to Zone model for immutable updates
+  - Fixed zone ID conversion for manual control (0→'za', 1→'zb', etc.)
+  - Fixed setZones API call to include all zone parameters
 - All changes follow the API client and models implementation guide
 
 ### Blockers

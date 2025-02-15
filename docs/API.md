@@ -22,6 +22,12 @@ The Sprinklers Pi system provides a RESTful API for controlling and monitoring t
   ]
 }
 ```
+**Notes**:
+- Zone IDs are 0-based internally but map to letters starting at 'b' in the API
+- Zone 1 (index 0) maps to 'zb' in manual control and 'b' in settings
+- Zone 2 (index 1) maps to 'zc' in manual control and 'c' in settings
+- And so on...
+
 **Possible Errors**:
 - Communications failure
 
@@ -29,11 +35,15 @@ The Sprinklers Pi system provides a RESTful API for controlling and monitoring t
 **Endpoint**: `/bin/setZones`  
 **Method**: GET  
 **Parameters**:
-- `z{a-z}name`: Zone name (string, max 19 chars)
-- `z{a-z}e`: Zone enabled status ("on"/"off")
-- `z{a-z}p`: Pump setting ("on"/"off")
+- `z{b-z}name`: Zone name (string, max 19 chars)
+- `z{b-z}e`: Zone enabled status ("on"/"off")
+- `z{b-z}p`: Pump setting ("on"/"off")
 
-Where {a-z} represents the zone ID (a=1, b=2, etc.)
+Where {b-z} represents the zone ID (b=1, c=2, etc.)
+
+**Notes**:
+- Returns an empty response on success
+- All zone parameters must be included in each request, even for zones not being modified
 
 ## Schedule Management
 
@@ -116,8 +126,12 @@ Where {a-z} represents the zone ID (a=1, b=2, etc.)
 **Endpoint**: `/bin/manual`  
 **Method**: GET  
 **Parameters**:
-- `zone`: Zone ID (za-zz)
+- `zone`: Zone ID (zb-zz)
 - `state`: Desired state ("on"/"off")
+
+**Notes**:
+- Zone IDs start at 'zb' for Zone 1, 'zc' for Zone 2, etc.
+- Returns an empty response on success
 
 ### Quick Schedule
 **Endpoint**: `/bin/setQSched`  
