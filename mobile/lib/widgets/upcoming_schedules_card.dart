@@ -101,7 +101,7 @@ class UpcomingSchedulesCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildScheduleItem(Schedule schedule) {
+  Widget _buildScheduleItem(ScheduleListItem schedule) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(

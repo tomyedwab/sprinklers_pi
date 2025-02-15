@@ -8,21 +8,24 @@ part 'schedule_provider.g.dart';
 @riverpod
 class ScheduleListNotifier extends _$ScheduleListNotifier {
   @override
-  Future<List<Schedule>> build() async {
+  Future<List<ScheduleListItem>> build() async {
     final apiClient = ref.watch(apiClientProvider);
     final scheduleList = await apiClient.getSchedules();
-    return scheduleList.map((item) => ApiScheduleX.fromApiListItem(item)).toList();
+    return scheduleList.map(ApiScheduleListX.fromApiListItem).toList();
   }
 
   Future<void> refresh() async {
     ref.invalidateSelf();
   }
 
-  Future<Schedule> getScheduleDetails(int id) async {
+  Future<ScheduleDetail> getScheduleDetails(int id) async {
     final apiClient = ref.read(apiClientProvider);
     final apiSchedule = await apiClient.getSchedule(id);
     final scheduleList = await future;
-    final listItem = scheduleList.firstWhere((s) => s.id == id);
+    final listItem = scheduleList.firstWhere(
+      (s) => s.id == id,
+      orElse: () => throw Exception('Schedule not found'),
+    );
     return ApiScheduleX.fromApiSchedule(id, apiSchedule, nextRun: listItem.nextRun);
   }
 
@@ -32,7 +35,7 @@ class ScheduleListNotifier extends _$ScheduleListNotifier {
     ref.invalidateSelf();
   }
 
-  Future<void> saveSchedule(Schedule schedule) async {
+  Future<void> saveSchedule(ScheduleDetail schedule) async {
     final apiClient = ref.read(apiClientProvider);
     await apiClient.saveSchedule(schedule);
     ref.invalidateSelf();
@@ -40,7 +43,7 @@ class ScheduleListNotifier extends _$ScheduleListNotifier {
 }
 
 @riverpod
-Future<Schedule> scheduleDetails(
+Future<ScheduleDetail> scheduleDetails(
   ScheduleDetailsRef ref,
   int id,
 ) async {

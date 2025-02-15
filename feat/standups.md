@@ -245,3 +245,31 @@ None
 - Will implement zone configuration validation
 - Need to add quick schedule integration
 - Plan to add proper error recovery mechanisms
+
+## 2024-03-25 - Maya Patel
+
+### Yesterday
+Completed WeatherCard implementation for the dashboard with proper integration of David's weather provider.
+
+### Today
+Refactored schedule models and UI for FLUTTER-303:
+- Split schedule models to properly handle API responses:
+  - Created `ScheduleListItem` for basic info from `/json/schedules`
+  - Created `ScheduleDetail` for full schedule data from `/json/schedule`
+  - Added proper null safety and error handling
+- Updated schedule provider to handle both models:
+  - List provider now returns basic schedule info
+  - Added proper error handling for schedule details
+  - Improved null safety in API conversions
+- Simplified schedule list UI:
+  - Streamlined card design to show essential info
+  - Added proper loading and error states
+  - Improved enabled/disabled state handling
+
+### Blockers
+None
+
+### Next
+- Will implement schedule editing screen
+- Need to add schedule creation flow
+- Plan to implement schedule time management UI

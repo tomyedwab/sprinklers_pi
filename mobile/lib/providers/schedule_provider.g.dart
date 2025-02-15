@@ -6,7 +6,7 @@ part of 'schedule_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$scheduleDetailsHash() => r'8810689aec4587fcfc53bced777cd90270c3f3bc';
+String _$scheduleDetailsHash() => r'de51f2edf52c695e0bd83dfc0b9e3006e84f2ebe';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -34,7 +34,7 @@ class _SystemHash {
 const scheduleDetailsProvider = ScheduleDetailsFamily();
 
 /// See also [scheduleDetails].
-class ScheduleDetailsFamily extends Family<AsyncValue<Schedule>> {
+class ScheduleDetailsFamily extends Family<AsyncValue<ScheduleDetail>> {
   /// See also [scheduleDetails].
   const ScheduleDetailsFamily();
 
@@ -72,7 +72,8 @@ class ScheduleDetailsFamily extends Family<AsyncValue<Schedule>> {
 }
 
 /// See also [scheduleDetails].
-class ScheduleDetailsProvider extends AutoDisposeFutureProvider<Schedule> {
+class ScheduleDetailsProvider
+    extends AutoDisposeFutureProvider<ScheduleDetail> {
   /// See also [scheduleDetails].
   ScheduleDetailsProvider(
     int id,
@@ -107,7 +108,7 @@ class ScheduleDetailsProvider extends AutoDisposeFutureProvider<Schedule> {
 
   @override
   Override overrideWith(
-    FutureOr<Schedule> Function(ScheduleDetailsRef provider) create,
+    FutureOr<ScheduleDetail> Function(ScheduleDetailsRef provider) create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -124,7 +125,7 @@ class ScheduleDetailsProvider extends AutoDisposeFutureProvider<Schedule> {
   }
 
   @override
-  AutoDisposeFutureProviderElement<Schedule> createElement() {
+  AutoDisposeFutureProviderElement<ScheduleDetail> createElement() {
     return _ScheduleDetailsProviderElement(this);
   }
 
@@ -144,13 +145,14 @@ class ScheduleDetailsProvider extends AutoDisposeFutureProvider<Schedule> {
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin ScheduleDetailsRef on AutoDisposeFutureProviderRef<Schedule> {
+mixin ScheduleDetailsRef on AutoDisposeFutureProviderRef<ScheduleDetail> {
   /// The parameter `id` of this provider.
   int get id;
 }
 
 class _ScheduleDetailsProviderElement
-    extends AutoDisposeFutureProviderElement<Schedule> with ScheduleDetailsRef {
+    extends AutoDisposeFutureProviderElement<ScheduleDetail>
+    with ScheduleDetailsRef {
   _ScheduleDetailsProviderElement(super.provider);
 
   @override
@@ -158,12 +160,12 @@ class _ScheduleDetailsProviderElement
 }
 
 String _$scheduleListNotifierHash() =>
-    r'255beeb20380f3af024374f43f9aea403311e29c';
+    r'2defc11061e2df425b8a1550bf8f6a19bb8641c5';
 
 /// See also [ScheduleListNotifier].
 @ProviderFor(ScheduleListNotifier)
 final scheduleListNotifierProvider = AutoDisposeAsyncNotifierProvider<
-    ScheduleListNotifier, List<Schedule>>.internal(
+    ScheduleListNotifier, List<ScheduleListItem>>.internal(
   ScheduleListNotifier.new,
   name: r'scheduleListNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -173,6 +175,7 @@ final scheduleListNotifierProvider = AutoDisposeAsyncNotifierProvider<
   allTransitiveDependencies: null,
 );
 
-typedef _$ScheduleListNotifier = AutoDisposeAsyncNotifier<List<Schedule>>;
+typedef _$ScheduleListNotifier
+    = AutoDisposeAsyncNotifier<List<ScheduleListItem>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

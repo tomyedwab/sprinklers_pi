@@ -5,6 +5,28 @@ part 'schedule.freezed.dart';
 part 'schedule.g.dart';
 
 @freezed
+class ScheduleListItem with _$ScheduleListItem {
+  const ScheduleListItem._();  // This needs to come before the factory
+
+  const factory ScheduleListItem({
+    required int id,
+    required String name,
+    required bool isEnabled,
+    String? nextRun,
+  }) = _ScheduleListItem;
+
+  String? get formattedNextRun {
+    if (nextRun == null) return null;
+    try {
+      final time = DateTime.parse(nextRun!);
+      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return nextRun;
+    }
+  }
+}
+
+@freezed
 class ScheduleTime with _$ScheduleTime {
   const factory ScheduleTime({
     required String time,      // HH:MM format
@@ -43,8 +65,10 @@ enum DayRestriction {
 }
 
 @freezed
-class Schedule with _$Schedule {
-  const factory Schedule({
+class ScheduleDetail with _$ScheduleDetail {
+  const ScheduleDetail._();  // This needs to come before the factory
+
+  const factory ScheduleDetail({
     required int id,
     required String name,
     required bool isEnabled,
@@ -61,12 +85,7 @@ class Schedule with _$Schedule {
     required List<ScheduleTime> times,
     required List<ScheduleZone> zones,
     String? nextRun,
-  }) = _Schedule;
-
-  factory Schedule.fromJson(Map<String, dynamic> json) =>
-      _$ScheduleFromJson(json);
-
-  const Schedule._();
+  }) = _ScheduleDetail;
 
   bool get isActive => isEnabled && times.any((t) => t.isEnabled);
   bool get hasActiveZones => zones.any((z) => z.isEnabled);
@@ -87,11 +106,50 @@ class Schedule with _$Schedule {
     final index = (weekday + 5) % 7;
     return weekdayStatus[index];
   }
+
+  String get typeDisplay => isDayBased ? 'Daily' : 'Interval';
+  
+  String? get formattedNextRun {
+    if (nextRun == null) return null;
+    try {
+      final time = DateTime.parse(nextRun!);
+      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return nextRun;
+    }
+  }
+
+  String get scheduleDescription {
+    if (isDayBased) {
+      final days = <String>[];
+      if (isSundayEnabled) days.add('Sun');
+      if (isMondayEnabled) days.add('Mon');
+      if (isTuesdayEnabled) days.add('Tue');
+      if (isWednesdayEnabled) days.add('Wed');
+      if (isThursdayEnabled) days.add('Thu');
+      if (isFridayEnabled) days.add('Fri');
+      if (isSaturdayEnabled) days.add('Sat');
+      return days.join(', ');
+    } else {
+      return 'Every $interval days';
+    }
+  }
+
+  String get restrictionText {
+    switch (restriction) {
+      case DayRestriction.none:
+        return '';
+      case DayRestriction.oddDays:
+        return 'Odd days only';
+      case DayRestriction.evenDays:
+        return 'Even days only';
+    }
+  }
 }
 
-extension ApiScheduleX on Schedule {
-  static Schedule fromApiSchedule(int id, ApiScheduleDetail api, {String? nextRun}) {
-    return Schedule(
+extension ApiScheduleX on ScheduleDetail {
+  static ScheduleDetail fromApiSchedule(int id, ApiScheduleDetail api, {String? nextRun}) {
+    return ScheduleDetail(
       id: id,
       name: api.name,
       isEnabled: api.enabled == 'on',
@@ -116,24 +174,14 @@ extension ApiScheduleX on Schedule {
       nextRun: nextRun,
     );
   }
+}
 
-  static Schedule fromApiListItem(ApiScheduleListItem item) {
-    return Schedule(
+extension ApiScheduleListX on ScheduleListItem {
+  static ScheduleListItem fromApiListItem(ApiScheduleListItem item) {
+    return ScheduleListItem(
       id: item.id,
       name: item.name,
       isEnabled: item.e == 'on',
-      isDayBased: true,  // Default values since list item doesn't have full info
-      interval: 1,
-      restriction: DayRestriction.none,
-      isSundayEnabled: false,
-      isMondayEnabled: false,
-      isTuesdayEnabled: false,
-      isWednesdayEnabled: false,
-      isThursdayEnabled: false,
-      isFridayEnabled: false,
-      isSaturdayEnabled: false,
-      times: [],
-      zones: [],
       nextRun: item.next,
     );
   }

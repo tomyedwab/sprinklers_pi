@@ -165,7 +165,7 @@ class ApiClient {
   }
 
   /// Update or create a schedule
-  Future<void> saveSchedule(app_model.Schedule schedule) async {
+  Future<void> saveSchedule(app_model.ScheduleDetail schedule) async {
     try {
       final params = {
         'id': schedule.id,

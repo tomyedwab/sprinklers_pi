@@ -14,6 +14,194 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
+/// @nodoc
+mixin _$ScheduleListItem {
+  int get id => throw _privateConstructorUsedError;
+  String get name => throw _privateConstructorUsedError;
+  bool get isEnabled => throw _privateConstructorUsedError;
+  String? get nextRun => throw _privateConstructorUsedError;
+
+  /// Create a copy of ScheduleListItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $ScheduleListItemCopyWith<ScheduleListItem> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ScheduleListItemCopyWith<$Res> {
+  factory $ScheduleListItemCopyWith(
+          ScheduleListItem value, $Res Function(ScheduleListItem) then) =
+      _$ScheduleListItemCopyWithImpl<$Res, ScheduleListItem>;
+  @useResult
+  $Res call({int id, String name, bool isEnabled, String? nextRun});
+}
+
+/// @nodoc
+class _$ScheduleListItemCopyWithImpl<$Res, $Val extends ScheduleListItem>
+    implements $ScheduleListItemCopyWith<$Res> {
+  _$ScheduleListItemCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of ScheduleListItem
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? name = null,
+    Object? isEnabled = null,
+    Object? nextRun = freezed,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      isEnabled: null == isEnabled
+          ? _value.isEnabled
+          : isEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
+      nextRun: freezed == nextRun
+          ? _value.nextRun
+          : nextRun // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$ScheduleListItemImplCopyWith<$Res>
+    implements $ScheduleListItemCopyWith<$Res> {
+  factory _$$ScheduleListItemImplCopyWith(_$ScheduleListItemImpl value,
+          $Res Function(_$ScheduleListItemImpl) then) =
+      __$$ScheduleListItemImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int id, String name, bool isEnabled, String? nextRun});
+}
+
+/// @nodoc
+class __$$ScheduleListItemImplCopyWithImpl<$Res>
+    extends _$ScheduleListItemCopyWithImpl<$Res, _$ScheduleListItemImpl>
+    implements _$$ScheduleListItemImplCopyWith<$Res> {
+  __$$ScheduleListItemImplCopyWithImpl(_$ScheduleListItemImpl _value,
+      $Res Function(_$ScheduleListItemImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of ScheduleListItem
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? name = null,
+    Object? isEnabled = null,
+    Object? nextRun = freezed,
+  }) {
+    return _then(_$ScheduleListItemImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      isEnabled: null == isEnabled
+          ? _value.isEnabled
+          : isEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
+      nextRun: freezed == nextRun
+          ? _value.nextRun
+          : nextRun // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ScheduleListItemImpl extends _ScheduleListItem {
+  const _$ScheduleListItemImpl(
+      {required this.id,
+      required this.name,
+      required this.isEnabled,
+      this.nextRun})
+      : super._();
+
+  @override
+  final int id;
+  @override
+  final String name;
+  @override
+  final bool isEnabled;
+  @override
+  final String? nextRun;
+
+  @override
+  String toString() {
+    return 'ScheduleListItem(id: $id, name: $name, isEnabled: $isEnabled, nextRun: $nextRun)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ScheduleListItemImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.isEnabled, isEnabled) ||
+                other.isEnabled == isEnabled) &&
+            (identical(other.nextRun, nextRun) || other.nextRun == nextRun));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, id, name, isEnabled, nextRun);
+
+  /// Create a copy of ScheduleListItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ScheduleListItemImplCopyWith<_$ScheduleListItemImpl> get copyWith =>
+      __$$ScheduleListItemImplCopyWithImpl<_$ScheduleListItemImpl>(
+          this, _$identity);
+}
+
+abstract class _ScheduleListItem extends ScheduleListItem {
+  const factory _ScheduleListItem(
+      {required final int id,
+      required final String name,
+      required final bool isEnabled,
+      final String? nextRun}) = _$ScheduleListItemImpl;
+  const _ScheduleListItem._() : super._();
+
+  @override
+  int get id;
+  @override
+  String get name;
+  @override
+  bool get isEnabled;
+  @override
+  String? get nextRun;
+
+  /// Create a copy of ScheduleListItem
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ScheduleListItemImplCopyWith<_$ScheduleListItemImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 ScheduleTime _$ScheduleTimeFromJson(Map<String, dynamic> json) {
   return _ScheduleTime.fromJson(json);
 }
@@ -352,12 +540,8 @@ abstract class _ScheduleZone implements ScheduleZone {
       throw _privateConstructorUsedError;
 }
 
-Schedule _$ScheduleFromJson(Map<String, dynamic> json) {
-  return _Schedule.fromJson(json);
-}
-
 /// @nodoc
-mixin _$Schedule {
+mixin _$ScheduleDetail {
   int get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   bool get isEnabled => throw _privateConstructorUsedError;
@@ -377,20 +561,18 @@ mixin _$Schedule {
   List<ScheduleZone> get zones => throw _privateConstructorUsedError;
   String? get nextRun => throw _privateConstructorUsedError;
 
-  /// Serializes this Schedule to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Schedule
+  /// Create a copy of ScheduleDetail
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $ScheduleCopyWith<Schedule> get copyWith =>
+  $ScheduleDetailCopyWith<ScheduleDetail> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $ScheduleCopyWith<$Res> {
-  factory $ScheduleCopyWith(Schedule value, $Res Function(Schedule) then) =
-      _$ScheduleCopyWithImpl<$Res, Schedule>;
+abstract class $ScheduleDetailCopyWith<$Res> {
+  factory $ScheduleDetailCopyWith(
+          ScheduleDetail value, $Res Function(ScheduleDetail) then) =
+      _$ScheduleDetailCopyWithImpl<$Res, ScheduleDetail>;
   @useResult
   $Res call(
       {int id,
@@ -412,16 +594,16 @@ abstract class $ScheduleCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$ScheduleCopyWithImpl<$Res, $Val extends Schedule>
-    implements $ScheduleCopyWith<$Res> {
-  _$ScheduleCopyWithImpl(this._value, this._then);
+class _$ScheduleDetailCopyWithImpl<$Res, $Val extends ScheduleDetail>
+    implements $ScheduleDetailCopyWith<$Res> {
+  _$ScheduleDetailCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Schedule
+  /// Create a copy of ScheduleDetail
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -513,11 +695,11 @@ class _$ScheduleCopyWithImpl<$Res, $Val extends Schedule>
 }
 
 /// @nodoc
-abstract class _$$ScheduleImplCopyWith<$Res>
-    implements $ScheduleCopyWith<$Res> {
-  factory _$$ScheduleImplCopyWith(
-          _$ScheduleImpl value, $Res Function(_$ScheduleImpl) then) =
-      __$$ScheduleImplCopyWithImpl<$Res>;
+abstract class _$$ScheduleDetailImplCopyWith<$Res>
+    implements $ScheduleDetailCopyWith<$Res> {
+  factory _$$ScheduleDetailImplCopyWith(_$ScheduleDetailImpl value,
+          $Res Function(_$ScheduleDetailImpl) then) =
+      __$$ScheduleDetailImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -540,14 +722,14 @@ abstract class _$$ScheduleImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$ScheduleImplCopyWithImpl<$Res>
-    extends _$ScheduleCopyWithImpl<$Res, _$ScheduleImpl>
-    implements _$$ScheduleImplCopyWith<$Res> {
-  __$$ScheduleImplCopyWithImpl(
-      _$ScheduleImpl _value, $Res Function(_$ScheduleImpl) _then)
+class __$$ScheduleDetailImplCopyWithImpl<$Res>
+    extends _$ScheduleDetailCopyWithImpl<$Res, _$ScheduleDetailImpl>
+    implements _$$ScheduleDetailImplCopyWith<$Res> {
+  __$$ScheduleDetailImplCopyWithImpl(
+      _$ScheduleDetailImpl _value, $Res Function(_$ScheduleDetailImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Schedule
+  /// Create a copy of ScheduleDetail
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -569,7 +751,7 @@ class __$$ScheduleImplCopyWithImpl<$Res>
     Object? zones = null,
     Object? nextRun = freezed,
   }) {
-    return _then(_$ScheduleImpl(
+    return _then(_$ScheduleDetailImpl(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -639,9 +821,9 @@ class __$$ScheduleImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
-class _$ScheduleImpl extends _Schedule {
-  const _$ScheduleImpl(
+
+class _$ScheduleDetailImpl extends _ScheduleDetail {
+  const _$ScheduleDetailImpl(
       {required this.id,
       required this.name,
       required this.isEnabled,
@@ -661,9 +843,6 @@ class _$ScheduleImpl extends _Schedule {
       : _times = times,
         _zones = zones,
         super._();
-
-  factory _$ScheduleImpl.fromJson(Map<String, dynamic> json) =>
-      _$$ScheduleImplFromJson(json);
 
   @override
   final int id;
@@ -714,14 +893,14 @@ class _$ScheduleImpl extends _Schedule {
 
   @override
   String toString() {
-    return 'Schedule(id: $id, name: $name, isEnabled: $isEnabled, isDayBased: $isDayBased, interval: $interval, restriction: $restriction, isSundayEnabled: $isSundayEnabled, isMondayEnabled: $isMondayEnabled, isTuesdayEnabled: $isTuesdayEnabled, isWednesdayEnabled: $isWednesdayEnabled, isThursdayEnabled: $isThursdayEnabled, isFridayEnabled: $isFridayEnabled, isSaturdayEnabled: $isSaturdayEnabled, times: $times, zones: $zones, nextRun: $nextRun)';
+    return 'ScheduleDetail(id: $id, name: $name, isEnabled: $isEnabled, isDayBased: $isDayBased, interval: $interval, restriction: $restriction, isSundayEnabled: $isSundayEnabled, isMondayEnabled: $isMondayEnabled, isTuesdayEnabled: $isTuesdayEnabled, isWednesdayEnabled: $isWednesdayEnabled, isThursdayEnabled: $isThursdayEnabled, isFridayEnabled: $isFridayEnabled, isSaturdayEnabled: $isSaturdayEnabled, times: $times, zones: $zones, nextRun: $nextRun)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ScheduleImpl &&
+            other is _$ScheduleDetailImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.isEnabled, isEnabled) ||
@@ -751,7 +930,6 @@ class _$ScheduleImpl extends _Schedule {
             (identical(other.nextRun, nextRun) || other.nextRun == nextRun));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -772,24 +950,18 @@ class _$ScheduleImpl extends _Schedule {
       const DeepCollectionEquality().hash(_zones),
       nextRun);
 
-  /// Create a copy of Schedule
+  /// Create a copy of ScheduleDetail
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$ScheduleImplCopyWith<_$ScheduleImpl> get copyWith =>
-      __$$ScheduleImplCopyWithImpl<_$ScheduleImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$ScheduleImplToJson(
-      this,
-    );
-  }
+  _$$ScheduleDetailImplCopyWith<_$ScheduleDetailImpl> get copyWith =>
+      __$$ScheduleDetailImplCopyWithImpl<_$ScheduleDetailImpl>(
+          this, _$identity);
 }
 
-abstract class _Schedule extends Schedule {
-  const factory _Schedule(
+abstract class _ScheduleDetail extends ScheduleDetail {
+  const factory _ScheduleDetail(
       {required final int id,
       required final String name,
       required final bool isEnabled,
@@ -805,11 +977,8 @@ abstract class _Schedule extends Schedule {
       required final bool isSaturdayEnabled,
       required final List<ScheduleTime> times,
       required final List<ScheduleZone> zones,
-      final String? nextRun}) = _$ScheduleImpl;
-  const _Schedule._() : super._();
-
-  factory _Schedule.fromJson(Map<String, dynamic> json) =
-      _$ScheduleImpl.fromJson;
+      final String? nextRun}) = _$ScheduleDetailImpl;
+  const _ScheduleDetail._() : super._();
 
   @override
   int get id;
@@ -844,10 +1013,10 @@ abstract class _Schedule extends Schedule {
   @override
   String? get nextRun;
 
-  /// Create a copy of Schedule
+  /// Create a copy of ScheduleDetail
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$ScheduleImplCopyWith<_$ScheduleImpl> get copyWith =>
+  _$$ScheduleDetailImplCopyWith<_$ScheduleDetailImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
