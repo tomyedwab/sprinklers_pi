@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/schedule_provider.dart';
 import '../../providers/schedule_zone_provider.dart';
 import '../../models/schedule.dart';
+import 'widgets/schedule_edit_modal.dart';
 
 class SchedulesScreen extends ConsumerWidget {
   const SchedulesScreen({super.key});
@@ -24,8 +25,21 @@ class SchedulesScreen extends ConsumerWidget {
                 separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) => _ScheduleListCard(
                   schedule: schedules[index],
-                  onEdit: () {
-                    // TODO: Implement edit
+                  onEdit: () async {
+                    final details = await ref
+                        .read(scheduleListNotifierProvider.notifier)
+                        .getScheduleDetails(schedules[index].id);
+                    if (context.mounted) {
+                      final result = await showModalBottomSheet<bool>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (context) => ScheduleEditModal(schedule: details),
+                      );
+                      if (result == true) {
+                        ref.invalidate(scheduleListNotifierProvider);
+                      }
+                    }
                   },
                   onDelete: () async {
                     final confirmed = await showDialog<bool>(
@@ -80,8 +94,16 @@ class SchedulesScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Implement add schedule
+        onPressed: () async {
+          final result = await showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            builder: (context) => const ScheduleEditModal(),
+          );
+          if (result == true) {
+            ref.invalidate(scheduleListNotifierProvider);
+          }
         },
         child: const Icon(Icons.add),
       ),

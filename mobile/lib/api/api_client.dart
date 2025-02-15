@@ -167,37 +167,10 @@ class ApiClient {
   /// Update or create a schedule
   Future<void> saveSchedule(app_model.ScheduleDetail schedule) async {
     try {
-      final params = {
-        'id': schedule.id,
-        'name': schedule.name,
-        'enable': schedule.isEnabled ? 'on' : 'off',
-        'type': schedule.isDayBased ? 'on' : 'off',
-        'interval': schedule.interval,
-        'restrict': schedule.restriction.value,
-        'd1': schedule.isSundayEnabled ? 'on' : 'off',
-        'd2': schedule.isMondayEnabled ? 'on' : 'off',
-        'd3': schedule.isTuesdayEnabled ? 'on' : 'off',
-        'd4': schedule.isWednesdayEnabled ? 'on' : 'off',
-        'd5': schedule.isThursdayEnabled ? 'on' : 'off',
-        'd6': schedule.isFridayEnabled ? 'on' : 'off',
-        'd7': schedule.isSaturdayEnabled ? 'on' : 'off',
-      };
-
-      // Add time slots
-      for (var i = 0; i < schedule.times.length; i++) {
-        final time = schedule.times[i];
-        params['t${i + 1}'] = time.time;
-        params['e${i + 1}'] = time.isEnabled ? 'on' : 'off';
-      }
-
-      // Add zone durations
-      for (var i = 0; i < schedule.zones.length; i++) {
-        final zone = schedule.zones[i];
-        final zoneId = _zoneIdToName(i);
-        params['z$zoneId'] = zone.duration.inMinutes;
-      }
-
-      await _get(ApiConfig.setSchedule, params);
+      final params = schedule.toApiParams();
+      await _get(ApiConfig.setSchedule, params.map(
+        (key, value) => MapEntry(key, value.toString()),
+      ));
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to save schedule: ${e.toString()}');

@@ -51,8 +51,8 @@ class ApiScheduleList {
 
 // Schedule detail response models
 class ApiScheduleTime {
-  final String t;  // Time in HH:MM format
-  final String e;  // Time slot enabled ("on"/"off")
+  final String t;  // "HH:MM" format
+  final String e;  // "on"/"off"
 
   ApiScheduleTime({
     required this.t,
@@ -73,8 +73,8 @@ class ApiScheduleTime {
 }
 
 class ApiScheduleZone {
-  final int duration;  // Run time in minutes (0-255)
-  final String e;     // Zone enabled in schedule ("on"/"off")
+  final int duration;
+  final String e;  // "on"/"off"
 
   ApiScheduleZone({
     required this.duration,
@@ -97,16 +97,17 @@ class ApiScheduleZone {
 class ApiScheduleDetail {
   final String name;
   final String enabled;  // "on"/"off"
-  final String type;    // "on" = day-based, "off" = interval-based
-  final int interval;   // Days between runs (1-20)
-  final int restrict;   // 0=None, 1=Odd days, 2=Even days
-  final String d1;      // Sunday enabled ("on"/"off")
-  final String d2;      // Monday enabled ("on"/"off")
-  final String d3;      // Tuesday enabled ("on"/"off")
-  final String d4;      // Wednesday enabled ("on"/"off")
-  final String d5;      // Thursday enabled ("on"/"off")
-  final String d6;      // Friday enabled ("on"/"off")
-  final String d7;      // Saturday enabled ("on"/"off")
+  final String type;    // "on"=Day-based, "off"=Interval
+  final String interval;  // String representation of interval (1-20)
+  final String restrict;  // "0"=None, "1"=Odd, "2"=Even
+  final String wadj;     // "on"/"off"
+  final String d1;       // "on"/"off" for Sunday
+  final String d2;       // "on"/"off" for Monday
+  final String d3;       // "on"/"off" for Tuesday
+  final String d4;       // "on"/"off" for Wednesday
+  final String d5;       // "on"/"off" for Thursday
+  final String d6;       // "on"/"off" for Friday
+  final String d7;       // "on"/"off" for Saturday
   final List<ApiScheduleTime> times;
   final List<ApiScheduleZone> zones;
 
@@ -116,6 +117,7 @@ class ApiScheduleDetail {
     required this.type,
     required this.interval,
     required this.restrict,
+    required this.wadj,
     required this.d1,
     required this.d2,
     required this.d3,
@@ -132,8 +134,9 @@ class ApiScheduleDetail {
       name: json['name'] as String,
       enabled: json['enabled'] as String,
       type: json['type'] as String,
-      interval: json['interval'] as int,
-      restrict: json['restrict'] as int,
+      interval: json['interval'] as String,
+      restrict: json['restrict'] as String,
+      wadj: json['wadj'] as String,
       d1: json['d1'] as String,
       d2: json['d2'] as String,
       d3: json['d3'] as String,
@@ -156,6 +159,7 @@ class ApiScheduleDetail {
     'type': type,
     'interval': interval,
     'restrict': restrict,
+    'wadj': wadj,
     'd1': d1,
     'd2': d2,
     'd3': d3,

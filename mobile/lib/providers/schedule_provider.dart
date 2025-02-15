@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../api/api_client.dart';
 import '../models/schedule.dart';
-import '../api/models/schedule.dart' as api_model;
+import '../api/models/schedule.dart';
 
 part 'schedule_provider.g.dart';
 
@@ -11,7 +11,7 @@ class ScheduleListNotifier extends _$ScheduleListNotifier {
   Future<List<ScheduleListItem>> build() async {
     final apiClient = ref.watch(apiClientProvider);
     final scheduleList = await apiClient.getSchedules();
-    return scheduleList.map(ApiScheduleListX.fromApiListItem).toList();
+    return scheduleList.map((s) => s.toModel()).toList();
   }
 
   Future<void> refresh() async {
@@ -26,7 +26,7 @@ class ScheduleListNotifier extends _$ScheduleListNotifier {
       (s) => s.id == id,
       orElse: () => throw Exception('Schedule not found'),
     );
-    return ApiScheduleX.fromApiSchedule(id, apiSchedule, nextRun: listItem.nextRun);
+    return apiSchedule.toModel().copyWith(id: id);
   }
 
   Future<void> deleteSchedule(int id) async {
