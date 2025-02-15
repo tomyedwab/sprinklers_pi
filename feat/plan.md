@@ -5,21 +5,21 @@ This document outlines the plan to convert the existing Sprinklers Pi web interf
 
 ## FLUTTER-1: Project Setup and Infrastructure Epic
 
-FLUTTER-101: Development Environment Setup (Assigned: Luis Rodriguez)
+FLUTTER-101: Development Environment Setup (Assigned: Luis Rodriguez. Status: Done)
 - Set up Flutter SDK and Dart development environment
 - Configure Android Studio/VS Code with Flutter plugins
 - Create new Flutter project with null safety enabled
 - Set up static analysis and code formatting (dartfmt)
 - Configure testing framework (Flutter test)
 
-FLUTTER-102: API Integration Layer (Assigned: David Kim)
+FLUTTER-102: API Integration Layer (Assigned: David Kim. Status: Done)
 - Create API client service using Dio or http package
 - Implement Dart type definitions and models using freezed
 - Create API endpoint constants
 - Implement error handling middleware
 - Add network status monitoring using Connectivity Plus
 
-FLUTTER-103: State Management Setup (Assigned: Maya Patel)
+FLUTTER-103: State Management Setup (Assigned: Maya Patel. Status: Done)
 - Implement Provider/Riverpod or Bloc for state management
 - Create state models for:
   - Zone states
@@ -30,7 +30,7 @@ FLUTTER-103: State Management Setup (Assigned: Maya Patel)
 
 ## FLUTTER-2: Core Widgets and Navigation Epic
 
-FLUTTER-201: Navigation Structure (Assigned: Maya Patel)
+FLUTTER-201: Navigation Structure (Assigned: Maya Patel. Status: Done)
 - Implement Flutter Navigation 2.0
 - Create bottom navigation bar for main sections:
   - Dashboard
@@ -58,7 +58,7 @@ FLUTTER-203: Theme and Styling (Assigned: Aisha Mohammed)
 
 ## FLUTTER-3: Feature Implementation Epic
 
-FLUTTER-301: Dashboard Screen (Assigned: Maya Patel)
+FLUTTER-301: Dashboard Screen (Assigned: Maya Patel. Status: Done)
 - System status display
 - Active zone indicator
 - Quick access controls
