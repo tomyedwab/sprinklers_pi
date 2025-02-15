@@ -6,6 +6,7 @@ import 'models/zone.dart';
 import 'models/system_state.dart';
 import 'models/schedule.dart';
 import '../models/schedule.dart' as app_model;
+import 'models/weather_check.dart';
 
 part 'api_client.g.dart';
 
@@ -179,6 +180,15 @@ class ApiClient {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to save schedule: ${e.toString()}');
+    }
+  }
+
+  Future<ApiWeatherCheck> getWeatherCheck() async {
+    try {
+      final response = await _get(ApiConfig.weatherCheck);
+      return ApiWeatherCheck.fromJson(response);
+    } catch (e) {
+      throw ApiException('Failed to get weather data: $e');
     }
   }
 }

@@ -1,3 +1,4 @@
+/// API endpoint configuration
 class ApiConfig {
   /// The base URL for the Sprinklers Pi API
   /// In development, this points to our proxy server

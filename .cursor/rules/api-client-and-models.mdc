@@ -7,19 +7,21 @@ globs: *.dart
 
 ## Directory Structure
 ```
-lib/
-  ├── api/
-  │   ├── api_client.dart     # Central HTTP client
-  │   ├── api_config.dart     # API endpoints and configuration
-  │   └── models/            # API models that directly map to JSON responses
-  │       ├── zone.dart
-  │       └── system_state.dart
-  └── models/               # Application models with business logic
-      ├── zone.dart
-      └── system_state.dart
+mobile/
+  |
+  └── lib/
+        ├── api/
+        │   ├── api_client.dart     # Central HTTP client
+        │   ├── api_config.dart     # API endpoints and configuration
+        │   └── models/            # API models that directly map to JSON responses
+        │       ├── zone.dart
+        │       └── system_state.dart
+        └── models/               # Application models with business logic
+            ├── zone.dart
+            └── system_state.dart
 ```
 
-## API Models (lib/api/models/)
+## API Models (mobile/lib/api/models/)
 
 API models should be simple and directly map to API responses:
 
@@ -68,7 +70,7 @@ class ApiSystemState {
 }
 ```
 
-## Application Models (lib/models/)
+## Application Models (mobile/lib/models/)
 
 Application models provide a clean interface for the rest of the app:
 
@@ -111,7 +113,7 @@ extension ApiSystemStateX on SystemState {
 }
 ```
 
-## API Client (lib/api/api_client.dart)
+## API Client (mobile/lib/api/api_client.dart)
 
 The API client should:
 
@@ -233,8 +235,8 @@ class ScheduleListNotifier extends _$ScheduleListNotifier {
 When adding a new endpoint:
 
 1. Add the endpoint URL to `api_config.dart`
-2. Create the API model in `lib/api/models/`
-3. Create the application model in `lib/models/`
+2. Create the API model in `mobile/lib/api/models/`
+3. Create the application model in `mobile/lib/models/`
 4. Add the API method to `ApiClient`
 5. Create a provider for state management
 6. Add tests for all new code
