@@ -21,9 +21,6 @@ class ZoneToggleWidget extends ConsumerStatefulWidget {
   
   /// Optional callback when zone state changes
   final Function(bool)? onStateChanged;
-  
-  /// Optional callback for long press actions (e.g. opening zone settings)
-  final VoidCallback? onLongPress;
 
   const ZoneToggleWidget({
     super.key,
@@ -33,7 +30,6 @@ class ZoneToggleWidget extends ConsumerStatefulWidget {
     required this.hasPumpAssociation,
     this.name,
     this.onStateChanged,
-    this.onLongPress,
   });
 
   @override
@@ -55,72 +51,55 @@ class _ZoneToggleWidgetState extends ConsumerState<ZoneToggleWidget> {
             : theme.colorScheme.onSurface
         : theme.colorScheme.onSurface.withOpacity(0.38);
 
-    return InkWell(
-      onLongPress: widget.onLongPress,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: stateColor,
-            width: widget.isRunning ? 2 : 1,
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          // Zone status indicator
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: stateColor,
+            ),
           ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            // Zone status indicator
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: stateColor,
-              ),
-            ),
-            const SizedBox(width: 8),
-            
-            // Zone controls
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Zone title with pump indicator
-                  Row(
-                    children: [
-                      Text(
-                        widget.name ?? 'Zone ${widget.zoneId + 1}',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: stateColor,
-                          fontStyle: widget.isEnabled ? null : FontStyle.italic,
-                        ),
-                      ),
-                      if (widget.hasPumpAssociation) ...[
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.waves,  // Using waves icon to indicate pump/water flow
-                          size: 16,
-                          color: stateColor,
-                        ),
-                      ],
-                    ],
+          const SizedBox(width: 12),
+          
+          // Zone title and pump indicator
+          Expanded(
+            child: Row(
+              children: [
+                Text(
+                  widget.name ?? 'Zone ${widget.zoneId + 1}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: stateColor,
+                    fontStyle: widget.isEnabled ? null : FontStyle.italic,
                   ),
-                  
-                  // Toggle switch
-                  if (widget.isEnabled)
-                    Switch(
-                      value: widget.isRunning,
-                      onChanged: widget.isEnabled
-                          ? (bool value) {
-                              widget.onStateChanged?.call(value);
-                            }
-                          : null,
-                    ),
+                ),
+                if (widget.hasPumpAssociation) ...[
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.waves,
+                    size: 16,
+                    color: stateColor,
+                  ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+          
+          // Toggle switch
+          if (widget.isEnabled)
+            Switch(
+              value: widget.isRunning,
+              onChanged: widget.isEnabled
+                  ? (bool value) {
+                      widget.onStateChanged?.call(value);
+                    }
+                  : null,
+            ),
+        ],
       ),
     );
   }

@@ -92,6 +92,32 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                     _loadData();
                   });
                 },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                    (states) {
+                      if (states.contains(MaterialState.selected)) {
+                        return Theme.of(context).colorScheme.primary;
+                      }
+                      return null;
+                    },
+                  ),
+                  foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                    (states) {
+                      if (states.contains(MaterialState.selected)) {
+                        return Theme.of(context).colorScheme.surface;
+                      }
+                      return Theme.of(context).colorScheme.onSurface;
+                    },
+                  ),
+                  iconColor: MaterialStateProperty.resolveWith<Color?>(
+                    (states) {
+                      if (states.contains(MaterialState.selected)) {
+                        return Theme.of(context).colorScheme.surface;
+                      }
+                      return Theme.of(context).colorScheme.onSurface;
+                    },
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               // Date range selection
@@ -172,6 +198,32 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                       _loadData();
                     });
                   },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                      (states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Theme.of(context).colorScheme.primary;
+                        }
+                        return null;
+                      },
+                    ),
+                    foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                      (states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Theme.of(context).colorScheme.surface;
+                        }
+                        return Theme.of(context).colorScheme.onSurface;
+                      },
+                    ),
+                    iconColor: MaterialStateProperty.resolveWith<Color?>(
+                      (states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Theme.of(context).colorScheme.surface;
+                        }
+                        return Theme.of(context).colorScheme.onSurface;
+                      },
+                    ),
+                  ),
                 ),
               ],
               const SizedBox(height: 8),

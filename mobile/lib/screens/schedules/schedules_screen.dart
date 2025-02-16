@@ -14,10 +14,17 @@ class SchedulesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final schedulesAsync = ref.watch(scheduleListNotifierProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: const Text('Schedules'),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Schedules',
+          style: theme.textTheme.titleLarge,
+        ),
+        elevation: 2,
       ),
       body: schedulesAsync.when(
         data: (schedules) => schedules.isEmpty
@@ -95,6 +102,7 @@ class SchedulesScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: theme.colorScheme.primary,
         onPressed: () async {
           final result = await showModalBottomSheet<bool>(
             context: context,
@@ -106,7 +114,10 @@ class SchedulesScreen extends ConsumerWidget {
             ref.invalidate(scheduleListNotifierProvider);
           }
         },
-        child: const Icon(Icons.add),
+        child: Icon(
+          Icons.add,
+          color: theme.colorScheme.surface,
+        ),
       ),
     );
   }
@@ -135,7 +146,9 @@ class _ScheduleListCard extends StatelessWidget {
         subtitle: schedule.formattedNextRun != null
             ? Text(
                 'Next run: ${schedule.formattedNextRun}',
-                style: theme.textTheme.bodySmall,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
               )
             : null,
         trailing: Row(
@@ -144,13 +157,14 @@ class _ScheduleListCard extends StatelessWidget {
             Switch(
               value: schedule.isEnabled,
               onChanged: onToggle,
+              activeColor: theme.colorScheme.primary,
             ),
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: Icon(Icons.edit, color: theme.colorScheme.secondary),
               onPressed: onEdit,
             ),
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: Icon(Icons.delete, color: theme.colorScheme.error),
               onPressed: onDelete,
             ),
           ],
@@ -172,7 +186,7 @@ class _ScheduleTypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final badgeColor = color ?? (type == 'Daily' ? Colors.blue : Colors.purple);
+    final badgeColor = color ?? theme.colorScheme.primary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -217,7 +231,7 @@ class _EmptyScheduleList extends StatelessWidget {
             Text(
               'Create a schedule to automatically water your zones',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.textTheme.bodySmall?.color,
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),

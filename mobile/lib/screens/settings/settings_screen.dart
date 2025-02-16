@@ -124,8 +124,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         setState(() => _hasUnsavedChanges = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Settings saved successfully'),
+          SnackBar(
+            content: Text(
+              'Settings saved successfully',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.surface,
+              ),
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -153,6 +158,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(settingsNotifierProvider);
+    final theme = Theme.of(context);
 
     // Update form whenever we get new settings data
     ref.listen<AsyncValue<Settings>>(settingsNotifierProvider, (previous, next) {
@@ -160,15 +166,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: const Text('Settings'),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Settings',
+          style: theme.textTheme.titleLarge,
+        ),
+        elevation: 2,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(
+              Icons.refresh,
+              color: theme.colorScheme.secondary,
+            ),
             onPressed: _confirmDiscard,
           ),
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: Icon(
+              Icons.save,
+              color: _hasUnsavedChanges ? theme.colorScheme.secondary : theme.colorScheme.secondary.withOpacity(0.5),
+            ),
             onPressed: _hasUnsavedChanges ? _saveSettings : null,
           ),
         ],
@@ -185,117 +203,198 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             padding: const EdgeInsets.all(16.0),
             children: [
               // Network Configuration
-              const Text('Network Configuration', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _webPortController,
-                decoration: const InputDecoration(
-                  labelText: 'Web Port',
-                  hintText: 'Enter web port (0-32767)',
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Network Configuration',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _webPortController,
+                        decoration: InputDecoration(
+                          labelText: 'Web Port',
+                          hintText: 'Enter web port (0-32767)',
+                          labelStyle: TextStyle(color: theme.colorScheme.secondary),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.primary),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5)),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Web port is required';
+                          }
+                          final port = int.tryParse(value);
+                          if (port == null || port < 0 || port > 32767) {
+                            return 'Port must be between 0 and 32767';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Web port is required';
-                  }
-                  final port = int.tryParse(value);
-                  if (port == null || port < 0 || port > 32767) {
-                    return 'Port must be between 0 and 32767';
-                  }
-                  return null;
-                },
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               // Weather Service Configuration
-              const Text('Weather Service', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _weatherServiceIpController,
-                decoration: const InputDecoration(
-                  labelText: 'Weather Service IP',
-                  hintText: 'Enter Weather Underground service IP',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Weather service IP is required';
-                  }
-                  // Add IP address format validation
-                  return null;
-                },
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _weatherApiSecretController,
-                decoration: const InputDecoration(
-                  labelText: 'Weather API Secret (Optional)',
-                  hintText: 'Enter Weather Underground API secret',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Location (Optional)',
-                  hintText: 'Enter location coordinates (latitude,longitude)',
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Weather Service',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _weatherServiceIpController,
+                        decoration: InputDecoration(
+                          labelText: 'Weather Service IP',
+                          hintText: 'Enter Weather Underground service IP',
+                          labelStyle: TextStyle(color: theme.colorScheme.secondary),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.primary),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5)),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Weather service IP is required';
+                          }
+                          // Add IP address format validation
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _weatherApiSecretController,
+                        decoration: InputDecoration(
+                          labelText: 'Weather API Secret (Optional)',
+                          hintText: 'Enter Weather Underground API secret',
+                          labelStyle: TextStyle(color: theme.colorScheme.secondary),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.primary),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _locationController,
+                        decoration: InputDecoration(
+                          labelText: 'Location (Optional)',
+                          hintText: 'Enter location coordinates (latitude,longitude)',
+                          labelStyle: TextStyle(color: theme.colorScheme.secondary),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.primary),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 24),
-              // System Configuration
-              const Text('System Configuration', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              DropdownButtonFormField<OutputType>(
-                value: _outputType,
-                decoration: const InputDecoration(
-                  labelText: 'Output Type',
+              // System Configuration
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'System Configuration',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<OutputType>(
+                        value: _outputType,
+                        decoration: InputDecoration(
+                          labelText: 'Output Type',
+                          labelStyle: TextStyle(color: theme.colorScheme.secondary),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.primary),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5)),
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: OutputType.none,
+                            child: Text('None'),
+                          ),
+                          DropdownMenuItem(
+                            value: OutputType.directPositive,
+                            child: Text('Direct+'),
+                          ),
+                          DropdownMenuItem(
+                            value: OutputType.directNegative,
+                            child: Text('Direct-'),
+                          ),
+                          DropdownMenuItem(
+                            value: OutputType.openSprinkler,
+                            child: Text('OpenSprinkler'),
+                          ),
+                        ],
+                        onChanged: (OutputType? value) {
+                          if (value != null) {
+                            setState(() {
+                              _outputType = value;
+                              _hasUnsavedChanges = true;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _seasonalAdjustmentController,
+                        decoration: InputDecoration(
+                          labelText: 'Seasonal Adjustment',
+                          hintText: 'Enter adjustment (0-200%)',
+                          suffixText: '%',
+                          labelStyle: TextStyle(color: theme.colorScheme.secondary),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.primary),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5)),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Seasonal adjustment is required';
+                          }
+                          final adjustment = int.tryParse(value);
+                          if (adjustment == null || adjustment < 0 || adjustment > 200) {
+                            return 'Adjustment must be between 0 and 200';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                items: const [
-                  DropdownMenuItem(
-                    value: OutputType.none,
-                    child: Text('None'),
-                  ),
-                  DropdownMenuItem(
-                    value: OutputType.directPositive,
-                    child: Text('Direct+'),
-                  ),
-                  DropdownMenuItem(
-                    value: OutputType.directNegative,
-                    child: Text('Direct-'),
-                  ),
-                  DropdownMenuItem(
-                    value: OutputType.openSprinkler,
-                    child: Text('OpenSprinkler'),
-                  ),
-                ],
-                onChanged: (OutputType? value) {
-                  if (value != null) {
-                    setState(() {
-                      _outputType = value;
-                      _hasUnsavedChanges = true;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _seasonalAdjustmentController,
-                decoration: const InputDecoration(
-                  labelText: 'Seasonal Adjustment',
-                  hintText: 'Enter adjustment (0-200%)',
-                  suffixText: '%',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Seasonal adjustment is required';
-                  }
-                  final adjustment = int.tryParse(value);
-                  if (adjustment == null || adjustment < 0 || adjustment > 200) {
-                    return 'Adjustment must be between 0 and 200';
-                  }
-                  return null;
-                },
               ),
             ],
           ),

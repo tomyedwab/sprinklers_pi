@@ -295,6 +295,32 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                     onSelectionChanged: (value) => setState(() {
                       _isDayBased = value.first;
                     }),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return theme.colorScheme.primary;
+                          }
+                          return null;
+                        },
+                      ),
+                      foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return theme.colorScheme.surface;
+                          }
+                          return theme.colorScheme.onSurface;
+                        },
+                      ),
+                      iconColor: MaterialStateProperty.resolveWith<Color?>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return theme.colorScheme.surface;
+                          }
+                          return theme.colorScheme.onSurface;
+                        },
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (_isDayBased) ...[
@@ -362,6 +388,32 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                       onSelectionChanged: (value) => setState(() {
                         _restriction = value.first;
                       }),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                          (states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return theme.colorScheme.primary;
+                            }
+                            return null;
+                          },
+                        ),
+                        foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                          (states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return theme.colorScheme.surface;
+                            }
+                            return theme.colorScheme.onSurface;
+                          },
+                        ),
+                        iconColor: MaterialStateProperty.resolveWith<Color?>(
+                          (states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return theme.colorScheme.surface;
+                            }
+                            return theme.colorScheme.onSurface;
+                          },
+                        ),
+                      ),
                     ),
                   ] else ...[
                     Text('Interval', style: theme.textTheme.titleSmall),

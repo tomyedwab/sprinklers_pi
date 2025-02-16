@@ -29,11 +29,22 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> with Sing
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: const Text('Diagnostics'),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Diagnostics',
+          style: theme.textTheme.titleLarge,
+        ),
+        elevation: 2,
         bottom: TabBar(
           controller: _tabController,
+          labelColor: theme.colorScheme.secondary,
+          unselectedLabelColor: theme.colorScheme.secondary.withOpacity(0.7),
+          indicatorColor: theme.colorScheme.primary,
           tabs: const [
             Tab(
               icon: Icon(Icons.list_alt),

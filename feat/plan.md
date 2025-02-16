@@ -81,7 +81,7 @@ FLUTTER-202: Shared Widgets (Assigned: David Kim. Status: Done)
 - Navigation elements (covered by FLUTTER-201)
 - Theme styling (handled by FLUTTER-203)
 
-FLUTTER-203: Theme and Styling (Assigned: Aisha Mohammed)
+FLUTTER-203: Theme and Styling (Assigned: Aisha Mohammed. Status: Done)
 - Create consistent Material/Cupertino design system
 - Implement light/dark theme support using ThemeData
 - Define color palette and typography

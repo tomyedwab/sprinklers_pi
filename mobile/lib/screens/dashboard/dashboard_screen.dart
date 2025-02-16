@@ -13,12 +13,24 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 600;
+
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(
+          'Dashboard',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        elevation: 2,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(
+              Icons.refresh,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
             onPressed: () {
               // TODO: Implement refresh functionality
             },
@@ -26,23 +38,60 @@ class DashboardScreen extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
+        color: Theme.of(context).colorScheme.primary,
         onRefresh: () async {
           // TODO: Implement pull-to-refresh functionality
         },
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: const [
-            SystemStatusCard(),
-            SizedBox(height: 16),
-            ActiveZoneCard(),
-            SizedBox(height: 16),
-            QuickActionsCard(),
-            SizedBox(height: 16),
-            UpcomingSchedulesCard(),
-            SizedBox(height: 16),
-            WeatherCard(),
-          ],
-        ),
+        child: isWideScreen
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Main content (60% width)
+                  Expanded(
+                    flex: 6,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: const [
+                          ActiveZoneCard(),
+                          SizedBox(height: 16),
+                          QuickActionsCard(),
+                          SizedBox(height: 16),
+                          WeatherCard(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Side panel (40% width)
+                  Expanded(
+                    flex: 4,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: const [
+                          SystemStatusCard(),
+                          SizedBox(height: 16),
+                          UpcomingSchedulesCard(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: const [
+                  SystemStatusCard(),
+                  SizedBox(height: 16),
+                  ActiveZoneCard(),
+                  SizedBox(height: 16),
+                  QuickActionsCard(),
+                  SizedBox(height: 16),
+                  UpcomingSchedulesCard(),
+                  SizedBox(height: 16),
+                  WeatherCard(),
+                ],
+              ),
       ),
     );
   }
