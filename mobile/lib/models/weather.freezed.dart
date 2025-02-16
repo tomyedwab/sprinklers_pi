@@ -16,16 +16,18 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$Weather {
-  bool get hasProvider => throw _privateConstructorUsedError;
-  bool get isKeyValid => throw _privateConstructorUsedError;
-  bool get isDataValid => throw _privateConstructorUsedError;
-  String get providerIp => throw _privateConstructorUsedError;
-  int get adjustmentScale => throw _privateConstructorUsedError;
-  Temperature get temperature => throw _privateConstructorUsedError;
-  Humidity get humidity => throw _privateConstructorUsedError;
-  Precipitation get precipitation => throw _privateConstructorUsedError;
-  Wind get wind => throw _privateConstructorUsedError;
-  double get uvIndex => throw _privateConstructorUsedError;
+  bool get noProvider => throw _privateConstructorUsedError;
+  bool get keyNotFound => throw _privateConstructorUsedError;
+  bool get valid => throw _privateConstructorUsedError;
+  String? get resolvedIP => throw _privateConstructorUsedError;
+  int get scale => throw _privateConstructorUsedError;
+  double get meanTemperature => throw _privateConstructorUsedError;
+  int get minHumidity => throw _privateConstructorUsedError;
+  int get maxHumidity => throw _privateConstructorUsedError;
+  double get precipitation => throw _privateConstructorUsedError;
+  double get precipitationToday => throw _privateConstructorUsedError;
+  double get windSpeed => throw _privateConstructorUsedError;
+  int get uvIndex => throw _privateConstructorUsedError;
 
   /// Create a copy of Weather
   /// with the given fields replaced by the non-null parameter values.
@@ -39,21 +41,18 @@ abstract class $WeatherCopyWith<$Res> {
       _$WeatherCopyWithImpl<$Res, Weather>;
   @useResult
   $Res call(
-      {bool hasProvider,
-      bool isKeyValid,
-      bool isDataValid,
-      String providerIp,
-      int adjustmentScale,
-      Temperature temperature,
-      Humidity humidity,
-      Precipitation precipitation,
-      Wind wind,
-      double uvIndex});
-
-  $TemperatureCopyWith<$Res> get temperature;
-  $HumidityCopyWith<$Res> get humidity;
-  $PrecipitationCopyWith<$Res> get precipitation;
-  $WindCopyWith<$Res> get wind;
+      {bool noProvider,
+      bool keyNotFound,
+      bool valid,
+      String? resolvedIP,
+      int scale,
+      double meanTemperature,
+      int minHumidity,
+      int maxHumidity,
+      double precipitation,
+      double precipitationToday,
+      double windSpeed,
+      int uvIndex});
 }
 
 /// @nodoc
@@ -71,99 +70,69 @@ class _$WeatherCopyWithImpl<$Res, $Val extends Weather>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? hasProvider = null,
-    Object? isKeyValid = null,
-    Object? isDataValid = null,
-    Object? providerIp = null,
-    Object? adjustmentScale = null,
-    Object? temperature = null,
-    Object? humidity = null,
+    Object? noProvider = null,
+    Object? keyNotFound = null,
+    Object? valid = null,
+    Object? resolvedIP = freezed,
+    Object? scale = null,
+    Object? meanTemperature = null,
+    Object? minHumidity = null,
+    Object? maxHumidity = null,
     Object? precipitation = null,
-    Object? wind = null,
+    Object? precipitationToday = null,
+    Object? windSpeed = null,
     Object? uvIndex = null,
   }) {
     return _then(_value.copyWith(
-      hasProvider: null == hasProvider
-          ? _value.hasProvider
-          : hasProvider // ignore: cast_nullable_to_non_nullable
+      noProvider: null == noProvider
+          ? _value.noProvider
+          : noProvider // ignore: cast_nullable_to_non_nullable
               as bool,
-      isKeyValid: null == isKeyValid
-          ? _value.isKeyValid
-          : isKeyValid // ignore: cast_nullable_to_non_nullable
+      keyNotFound: null == keyNotFound
+          ? _value.keyNotFound
+          : keyNotFound // ignore: cast_nullable_to_non_nullable
               as bool,
-      isDataValid: null == isDataValid
-          ? _value.isDataValid
-          : isDataValid // ignore: cast_nullable_to_non_nullable
+      valid: null == valid
+          ? _value.valid
+          : valid // ignore: cast_nullable_to_non_nullable
               as bool,
-      providerIp: null == providerIp
-          ? _value.providerIp
-          : providerIp // ignore: cast_nullable_to_non_nullable
-              as String,
-      adjustmentScale: null == adjustmentScale
-          ? _value.adjustmentScale
-          : adjustmentScale // ignore: cast_nullable_to_non_nullable
+      resolvedIP: freezed == resolvedIP
+          ? _value.resolvedIP
+          : resolvedIP // ignore: cast_nullable_to_non_nullable
+              as String?,
+      scale: null == scale
+          ? _value.scale
+          : scale // ignore: cast_nullable_to_non_nullable
               as int,
-      temperature: null == temperature
-          ? _value.temperature
-          : temperature // ignore: cast_nullable_to_non_nullable
-              as Temperature,
-      humidity: null == humidity
-          ? _value.humidity
-          : humidity // ignore: cast_nullable_to_non_nullable
-              as Humidity,
+      meanTemperature: null == meanTemperature
+          ? _value.meanTemperature
+          : meanTemperature // ignore: cast_nullable_to_non_nullable
+              as double,
+      minHumidity: null == minHumidity
+          ? _value.minHumidity
+          : minHumidity // ignore: cast_nullable_to_non_nullable
+              as int,
+      maxHumidity: null == maxHumidity
+          ? _value.maxHumidity
+          : maxHumidity // ignore: cast_nullable_to_non_nullable
+              as int,
       precipitation: null == precipitation
           ? _value.precipitation
           : precipitation // ignore: cast_nullable_to_non_nullable
-              as Precipitation,
-      wind: null == wind
-          ? _value.wind
-          : wind // ignore: cast_nullable_to_non_nullable
-              as Wind,
+              as double,
+      precipitationToday: null == precipitationToday
+          ? _value.precipitationToday
+          : precipitationToday // ignore: cast_nullable_to_non_nullable
+              as double,
+      windSpeed: null == windSpeed
+          ? _value.windSpeed
+          : windSpeed // ignore: cast_nullable_to_non_nullable
+              as double,
       uvIndex: null == uvIndex
           ? _value.uvIndex
           : uvIndex // ignore: cast_nullable_to_non_nullable
-              as double,
+              as int,
     ) as $Val);
-  }
-
-  /// Create a copy of Weather
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $TemperatureCopyWith<$Res> get temperature {
-    return $TemperatureCopyWith<$Res>(_value.temperature, (value) {
-      return _then(_value.copyWith(temperature: value) as $Val);
-    });
-  }
-
-  /// Create a copy of Weather
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $HumidityCopyWith<$Res> get humidity {
-    return $HumidityCopyWith<$Res>(_value.humidity, (value) {
-      return _then(_value.copyWith(humidity: value) as $Val);
-    });
-  }
-
-  /// Create a copy of Weather
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $PrecipitationCopyWith<$Res> get precipitation {
-    return $PrecipitationCopyWith<$Res>(_value.precipitation, (value) {
-      return _then(_value.copyWith(precipitation: value) as $Val);
-    });
-  }
-
-  /// Create a copy of Weather
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $WindCopyWith<$Res> get wind {
-    return $WindCopyWith<$Res>(_value.wind, (value) {
-      return _then(_value.copyWith(wind: value) as $Val);
-    });
   }
 }
 
@@ -175,25 +144,18 @@ abstract class _$$WeatherImplCopyWith<$Res> implements $WeatherCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {bool hasProvider,
-      bool isKeyValid,
-      bool isDataValid,
-      String providerIp,
-      int adjustmentScale,
-      Temperature temperature,
-      Humidity humidity,
-      Precipitation precipitation,
-      Wind wind,
-      double uvIndex});
-
-  @override
-  $TemperatureCopyWith<$Res> get temperature;
-  @override
-  $HumidityCopyWith<$Res> get humidity;
-  @override
-  $PrecipitationCopyWith<$Res> get precipitation;
-  @override
-  $WindCopyWith<$Res> get wind;
+      {bool noProvider,
+      bool keyNotFound,
+      bool valid,
+      String? resolvedIP,
+      int scale,
+      double meanTemperature,
+      int minHumidity,
+      int maxHumidity,
+      double precipitation,
+      double precipitationToday,
+      double windSpeed,
+      int uvIndex});
 }
 
 /// @nodoc
@@ -209,58 +171,68 @@ class __$$WeatherImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? hasProvider = null,
-    Object? isKeyValid = null,
-    Object? isDataValid = null,
-    Object? providerIp = null,
-    Object? adjustmentScale = null,
-    Object? temperature = null,
-    Object? humidity = null,
+    Object? noProvider = null,
+    Object? keyNotFound = null,
+    Object? valid = null,
+    Object? resolvedIP = freezed,
+    Object? scale = null,
+    Object? meanTemperature = null,
+    Object? minHumidity = null,
+    Object? maxHumidity = null,
     Object? precipitation = null,
-    Object? wind = null,
+    Object? precipitationToday = null,
+    Object? windSpeed = null,
     Object? uvIndex = null,
   }) {
     return _then(_$WeatherImpl(
-      hasProvider: null == hasProvider
-          ? _value.hasProvider
-          : hasProvider // ignore: cast_nullable_to_non_nullable
+      noProvider: null == noProvider
+          ? _value.noProvider
+          : noProvider // ignore: cast_nullable_to_non_nullable
               as bool,
-      isKeyValid: null == isKeyValid
-          ? _value.isKeyValid
-          : isKeyValid // ignore: cast_nullable_to_non_nullable
+      keyNotFound: null == keyNotFound
+          ? _value.keyNotFound
+          : keyNotFound // ignore: cast_nullable_to_non_nullable
               as bool,
-      isDataValid: null == isDataValid
-          ? _value.isDataValid
-          : isDataValid // ignore: cast_nullable_to_non_nullable
+      valid: null == valid
+          ? _value.valid
+          : valid // ignore: cast_nullable_to_non_nullable
               as bool,
-      providerIp: null == providerIp
-          ? _value.providerIp
-          : providerIp // ignore: cast_nullable_to_non_nullable
-              as String,
-      adjustmentScale: null == adjustmentScale
-          ? _value.adjustmentScale
-          : adjustmentScale // ignore: cast_nullable_to_non_nullable
+      resolvedIP: freezed == resolvedIP
+          ? _value.resolvedIP
+          : resolvedIP // ignore: cast_nullable_to_non_nullable
+              as String?,
+      scale: null == scale
+          ? _value.scale
+          : scale // ignore: cast_nullable_to_non_nullable
               as int,
-      temperature: null == temperature
-          ? _value.temperature
-          : temperature // ignore: cast_nullable_to_non_nullable
-              as Temperature,
-      humidity: null == humidity
-          ? _value.humidity
-          : humidity // ignore: cast_nullable_to_non_nullable
-              as Humidity,
+      meanTemperature: null == meanTemperature
+          ? _value.meanTemperature
+          : meanTemperature // ignore: cast_nullable_to_non_nullable
+              as double,
+      minHumidity: null == minHumidity
+          ? _value.minHumidity
+          : minHumidity // ignore: cast_nullable_to_non_nullable
+              as int,
+      maxHumidity: null == maxHumidity
+          ? _value.maxHumidity
+          : maxHumidity // ignore: cast_nullable_to_non_nullable
+              as int,
       precipitation: null == precipitation
           ? _value.precipitation
           : precipitation // ignore: cast_nullable_to_non_nullable
-              as Precipitation,
-      wind: null == wind
-          ? _value.wind
-          : wind // ignore: cast_nullable_to_non_nullable
-              as Wind,
+              as double,
+      precipitationToday: null == precipitationToday
+          ? _value.precipitationToday
+          : precipitationToday // ignore: cast_nullable_to_non_nullable
+              as double,
+      windSpeed: null == windSpeed
+          ? _value.windSpeed
+          : windSpeed // ignore: cast_nullable_to_non_nullable
+              as double,
       uvIndex: null == uvIndex
           ? _value.uvIndex
           : uvIndex // ignore: cast_nullable_to_non_nullable
-              as double,
+              as int,
     ));
   }
 }
@@ -269,42 +241,48 @@ class __$$WeatherImplCopyWithImpl<$Res>
 
 class _$WeatherImpl extends _Weather {
   const _$WeatherImpl(
-      {required this.hasProvider,
-      required this.isKeyValid,
-      required this.isDataValid,
-      required this.providerIp,
-      required this.adjustmentScale,
-      required this.temperature,
-      required this.humidity,
+      {required this.noProvider,
+      required this.keyNotFound,
+      required this.valid,
+      this.resolvedIP,
+      required this.scale,
+      required this.meanTemperature,
+      required this.minHumidity,
+      required this.maxHumidity,
       required this.precipitation,
-      required this.wind,
+      required this.precipitationToday,
+      required this.windSpeed,
       required this.uvIndex})
       : super._();
 
   @override
-  final bool hasProvider;
+  final bool noProvider;
   @override
-  final bool isKeyValid;
+  final bool keyNotFound;
   @override
-  final bool isDataValid;
+  final bool valid;
   @override
-  final String providerIp;
+  final String? resolvedIP;
   @override
-  final int adjustmentScale;
+  final int scale;
   @override
-  final Temperature temperature;
+  final double meanTemperature;
   @override
-  final Humidity humidity;
+  final int minHumidity;
   @override
-  final Precipitation precipitation;
+  final int maxHumidity;
   @override
-  final Wind wind;
+  final double precipitation;
   @override
-  final double uvIndex;
+  final double precipitationToday;
+  @override
+  final double windSpeed;
+  @override
+  final int uvIndex;
 
   @override
   String toString() {
-    return 'Weather(hasProvider: $hasProvider, isKeyValid: $isKeyValid, isDataValid: $isDataValid, providerIp: $providerIp, adjustmentScale: $adjustmentScale, temperature: $temperature, humidity: $humidity, precipitation: $precipitation, wind: $wind, uvIndex: $uvIndex)';
+    return 'Weather(noProvider: $noProvider, keyNotFound: $keyNotFound, valid: $valid, resolvedIP: $resolvedIP, scale: $scale, meanTemperature: $meanTemperature, minHumidity: $minHumidity, maxHumidity: $maxHumidity, precipitation: $precipitation, precipitationToday: $precipitationToday, windSpeed: $windSpeed, uvIndex: $uvIndex)';
   }
 
   @override
@@ -312,38 +290,43 @@ class _$WeatherImpl extends _Weather {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WeatherImpl &&
-            (identical(other.hasProvider, hasProvider) ||
-                other.hasProvider == hasProvider) &&
-            (identical(other.isKeyValid, isKeyValid) ||
-                other.isKeyValid == isKeyValid) &&
-            (identical(other.isDataValid, isDataValid) ||
-                other.isDataValid == isDataValid) &&
-            (identical(other.providerIp, providerIp) ||
-                other.providerIp == providerIp) &&
-            (identical(other.adjustmentScale, adjustmentScale) ||
-                other.adjustmentScale == adjustmentScale) &&
-            (identical(other.temperature, temperature) ||
-                other.temperature == temperature) &&
-            (identical(other.humidity, humidity) ||
-                other.humidity == humidity) &&
+            (identical(other.noProvider, noProvider) ||
+                other.noProvider == noProvider) &&
+            (identical(other.keyNotFound, keyNotFound) ||
+                other.keyNotFound == keyNotFound) &&
+            (identical(other.valid, valid) || other.valid == valid) &&
+            (identical(other.resolvedIP, resolvedIP) ||
+                other.resolvedIP == resolvedIP) &&
+            (identical(other.scale, scale) || other.scale == scale) &&
+            (identical(other.meanTemperature, meanTemperature) ||
+                other.meanTemperature == meanTemperature) &&
+            (identical(other.minHumidity, minHumidity) ||
+                other.minHumidity == minHumidity) &&
+            (identical(other.maxHumidity, maxHumidity) ||
+                other.maxHumidity == maxHumidity) &&
             (identical(other.precipitation, precipitation) ||
                 other.precipitation == precipitation) &&
-            (identical(other.wind, wind) || other.wind == wind) &&
+            (identical(other.precipitationToday, precipitationToday) ||
+                other.precipitationToday == precipitationToday) &&
+            (identical(other.windSpeed, windSpeed) ||
+                other.windSpeed == windSpeed) &&
             (identical(other.uvIndex, uvIndex) || other.uvIndex == uvIndex));
   }
 
   @override
   int get hashCode => Object.hash(
       runtimeType,
-      hasProvider,
-      isKeyValid,
-      isDataValid,
-      providerIp,
-      adjustmentScale,
-      temperature,
-      humidity,
+      noProvider,
+      keyNotFound,
+      valid,
+      resolvedIP,
+      scale,
+      meanTemperature,
+      minHumidity,
+      maxHumidity,
       precipitation,
-      wind,
+      precipitationToday,
+      windSpeed,
       uvIndex);
 
   /// Create a copy of Weather
@@ -357,38 +340,44 @@ class _$WeatherImpl extends _Weather {
 
 abstract class _Weather extends Weather {
   const factory _Weather(
-      {required final bool hasProvider,
-      required final bool isKeyValid,
-      required final bool isDataValid,
-      required final String providerIp,
-      required final int adjustmentScale,
-      required final Temperature temperature,
-      required final Humidity humidity,
-      required final Precipitation precipitation,
-      required final Wind wind,
-      required final double uvIndex}) = _$WeatherImpl;
+      {required final bool noProvider,
+      required final bool keyNotFound,
+      required final bool valid,
+      final String? resolvedIP,
+      required final int scale,
+      required final double meanTemperature,
+      required final int minHumidity,
+      required final int maxHumidity,
+      required final double precipitation,
+      required final double precipitationToday,
+      required final double windSpeed,
+      required final int uvIndex}) = _$WeatherImpl;
   const _Weather._() : super._();
 
   @override
-  bool get hasProvider;
+  bool get noProvider;
   @override
-  bool get isKeyValid;
+  bool get keyNotFound;
   @override
-  bool get isDataValid;
+  bool get valid;
   @override
-  String get providerIp;
+  String? get resolvedIP;
   @override
-  int get adjustmentScale;
+  int get scale;
   @override
-  Temperature get temperature;
+  double get meanTemperature;
   @override
-  Humidity get humidity;
+  int get minHumidity;
   @override
-  Precipitation get precipitation;
+  int get maxHumidity;
   @override
-  Wind get wind;
+  double get precipitation;
   @override
-  double get uvIndex;
+  double get precipitationToday;
+  @override
+  double get windSpeed;
+  @override
+  int get uvIndex;
 
   /// Create a copy of Weather
   /// with the given fields replaced by the non-null parameter values.

@@ -43,7 +43,7 @@ class _WeatherContent extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Weather', style: theme.textTheme.titleLarge),
-            Text('${weather.adjustmentScale}% Adjustment',
+            Text('${weather.scale}% Adjustment',
                 style: theme.textTheme.titleMedium),
           ],
         ),
@@ -54,14 +54,14 @@ class _WeatherContent extends StatelessWidget {
               child: _WeatherTile(
                 icon: Icons.thermostat,
                 label: 'Temperature',
-                value: '${weather.temperature.fahrenheit.round()}°F',
+                value: '${weather.meanTemperature.round()}°F',
               ),
             ),
             Expanded(
               child: _WeatherTile(
                 icon: Icons.water_drop,
                 label: 'Humidity',
-                value: '${weather.humidity.average}%',
+                value: '${(weather.minHumidity + weather.maxHumidity) ~/ 2}%',
               ),
             ),
           ],
@@ -73,14 +73,14 @@ class _WeatherContent extends StatelessWidget {
               child: _WeatherTile(
                 icon: Icons.umbrella,
                 label: 'Rain',
-                value: '${weather.precipitation.totalInches.toStringAsFixed(2)}in',
+                value: '${(weather.precipitation + weather.precipitationToday).toStringAsFixed(2)}in',
               ),
             ),
             Expanded(
               child: _WeatherTile(
                 icon: Icons.air,
                 label: 'Wind',
-                value: '${weather.wind.mph.round()} mph',
+                value: '${weather.windSpeed.round()} mph',
               ),
             ),
           ],
@@ -89,8 +89,8 @@ class _WeatherContent extends StatelessWidget {
         _WeatherTile(
           icon: Icons.wb_sunny,
           label: 'UV Index',
-          value: weather.uvIndex.toStringAsFixed(1),
-          subtitle: _getUVDescription(weather.uvIndex),
+          value: (weather.uvIndex / 10).toStringAsFixed(1),
+          subtitle: _getUVDescription(weather.uvIndex / 10),
         ),
       ],
     );

@@ -7,13 +7,18 @@ part 'weather_provider.g.dart';
 @riverpod
 class WeatherNotifier extends _$WeatherNotifier {
   Future<Weather> build() async {
-    final apiClient = ref.watch(apiClientProvider);
-    final weatherCheck = await apiClient.getWeatherCheck();
-    return weatherCheck.toModel();
+    return _fetchWeather();
+  }
+
+  Future<Weather> _fetchWeather() async {
+    final apiClient = ref.read(apiClientProvider);
+    final response = await apiClient.getWeatherCheck();
+    return Weather.fromJson(response.toJson());
   }
 
   Future<void> refresh() async {
-    ref.invalidateSelf();
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _fetchWeather());
   }
 }
 

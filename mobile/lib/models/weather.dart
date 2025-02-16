@@ -1,28 +1,45 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../api/models/weather_check.dart' as api;
 
 part 'weather.freezed.dart';
 
 @freezed
 class Weather with _$Weather {
   const factory Weather({
-    required bool hasProvider,
-    required bool isKeyValid,
-    required bool isDataValid,
-    required String providerIp,
-    required int adjustmentScale,
-    required Temperature temperature,
-    required Humidity humidity,
-    required Precipitation precipitation,
-    required Wind wind,
-    required double uvIndex,
+    required bool noProvider,
+    required bool keyNotFound,
+    required bool valid,
+    String? resolvedIP,
+    required int scale,
+    required double meanTemperature,
+    required int minHumidity,
+    required int maxHumidity,
+    required double precipitation,
+    required double precipitationToday,
+    required double windSpeed,
+    required int uvIndex,
   }) = _Weather;
 
   const Weather._();
 
-  bool get isFullyConfigured => hasProvider && isKeyValid && isDataValid;
-  
-  double get adjustmentPercentage => adjustmentScale / 100.0;
+  factory Weather.fromJson(Map<String, dynamic> json) {
+    return Weather(
+      noProvider: json['noprovider']?.toString() == 'true',
+      keyNotFound: json['keynotfound']?.toString() == 'true',
+      valid: json['valid']?.toString() == 'true',
+      resolvedIP: json['resolvedIP'] as String?,
+      scale: int.tryParse(json['scale']?.toString() ?? '100') ?? 100,
+      meanTemperature: double.tryParse(json['meantempi']?.toString() ?? '0') ?? 0,
+      minHumidity: int.tryParse(json['minhumidity']?.toString() ?? '0') ?? 0,
+      maxHumidity: int.tryParse(json['maxhumidity']?.toString() ?? '0') ?? 0,
+      precipitation: double.tryParse(json['precip']?.toString() ?? '0') ?? 0,
+      precipitationToday: double.tryParse(json['precip_today']?.toString() ?? '0') ?? 0,
+      windSpeed: double.tryParse(json['wind_mph']?.toString() ?? '0') ?? 0,
+      uvIndex: int.tryParse(json['UV']?.toString() ?? '0') ?? 0,
+    );
+  }
+
+  bool get isFullyConfigured => !noProvider && !keyNotFound && valid;
+  double get adjustmentPercentage => scale / 100.0;
 }
 
 @freezed
@@ -72,31 +89,4 @@ class Wind with _$Wind {
   const Wind._();
 
   double get metersPerSecond => mph * 0.44704;
-}
-
-extension ApiWeatherCheckX on api.ApiWeatherCheck {
-  Weather toModel() {
-    return Weather(
-      hasProvider: !noprovider,
-      isKeyValid: !keynotfound,
-      isDataValid: valid,
-      providerIp: resolvedIP,
-      adjustmentScale: scale,
-      temperature: Temperature(
-        fahrenheit: meantempi.toDouble(),
-      ),
-      humidity: Humidity(
-        minimum: minhumidity,
-        maximum: maxhumidity,
-      ),
-      precipitation: Precipitation(
-        yesterdayInches: precip / 100.0,
-        todayInches: precip_today / 100.0,
-      ),
-      wind: Wind(
-        mph: wind_mph / 10.0,
-      ),
-      uvIndex: UV / 10.0,
-    );
-  }
 } 

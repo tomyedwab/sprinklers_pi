@@ -24,7 +24,7 @@ final weatherAutoRefreshProvider = AutoDisposeStreamProvider<Weather>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef WeatherAutoRefreshRef = AutoDisposeStreamProviderRef<Weather>;
-String _$weatherNotifierHash() => r'14784010a69fbc64d72b304da838ad0ae2be6c7b';
+String _$weatherNotifierHash() => r'0036c70c4356a0f5ec14dab7005691d5a7841db2';
 
 /// See also [WeatherNotifier].
 @ProviderFor(WeatherNotifier)
