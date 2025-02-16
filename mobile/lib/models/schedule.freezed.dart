@@ -516,7 +516,7 @@ mixin _$ScheduleDetail {
       throw _privateConstructorUsedError; // Sunday to Saturday
   List<ScheduleTime> get times => throw _privateConstructorUsedError;
   List<ScheduleZone> get zones => throw _privateConstructorUsedError;
-  int get id => throw _privateConstructorUsedError;
+  int? get id => throw _privateConstructorUsedError;
 
   /// Create a copy of ScheduleDetail
   /// with the given fields replaced by the non-null parameter values.
@@ -541,7 +541,7 @@ abstract class $ScheduleDetailCopyWith<$Res> {
       List<bool> days,
       List<ScheduleTime> times,
       List<ScheduleZone> zones,
-      int id});
+      int? id});
 }
 
 /// @nodoc
@@ -568,7 +568,7 @@ class _$ScheduleDetailCopyWithImpl<$Res, $Val extends ScheduleDetail>
     Object? days = null,
     Object? times = null,
     Object? zones = null,
-    Object? id = null,
+    Object? id = freezed,
   }) {
     return _then(_value.copyWith(
       name: null == name
@@ -607,10 +607,10 @@ class _$ScheduleDetailCopyWithImpl<$Res, $Val extends ScheduleDetail>
           ? _value.zones
           : zones // ignore: cast_nullable_to_non_nullable
               as List<ScheduleZone>,
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
     ) as $Val);
   }
 }
@@ -633,7 +633,7 @@ abstract class _$$ScheduleDetailImplCopyWith<$Res>
       List<bool> days,
       List<ScheduleTime> times,
       List<ScheduleZone> zones,
-      int id});
+      int? id});
 }
 
 /// @nodoc
@@ -658,7 +658,7 @@ class __$$ScheduleDetailImplCopyWithImpl<$Res>
     Object? days = null,
     Object? times = null,
     Object? zones = null,
-    Object? id = null,
+    Object? id = freezed,
   }) {
     return _then(_$ScheduleDetailImpl(
       name: null == name
@@ -697,10 +697,10 @@ class __$$ScheduleDetailImplCopyWithImpl<$Res>
           ? _value._zones
           : zones // ignore: cast_nullable_to_non_nullable
               as List<ScheduleZone>,
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
     ));
   }
 }
@@ -718,7 +718,7 @@ class _$ScheduleDetailImpl extends _ScheduleDetail {
       required final List<bool> days,
       required final List<ScheduleTime> times,
       required final List<ScheduleZone> zones,
-      this.id = 0})
+      this.id = null})
       : _days = days,
         _times = times,
         _zones = zones,
@@ -765,7 +765,7 @@ class _$ScheduleDetailImpl extends _ScheduleDetail {
 
   @override
   @JsonKey()
-  final int id;
+  final int? id;
 
   @override
   String toString() {
@@ -828,7 +828,7 @@ abstract class _ScheduleDetail extends ScheduleDetail {
       required final List<bool> days,
       required final List<ScheduleTime> times,
       required final List<ScheduleZone> zones,
-      final int id}) = _$ScheduleDetailImpl;
+      final int? id}) = _$ScheduleDetailImpl;
   const _ScheduleDetail._() : super._();
 
   @override
@@ -850,7 +850,7 @@ abstract class _ScheduleDetail extends ScheduleDetail {
   @override
   List<ScheduleZone> get zones;
   @override
-  int get id;
+  int? get id;
 
   /// Create a copy of ScheduleDetail
   /// with the given fields replaced by the non-null parameter values.

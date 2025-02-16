@@ -160,7 +160,7 @@ class _ScheduleDetailsProviderElement
 }
 
 String _$scheduleListNotifierHash() =>
-    r'2defc11061e2df425b8a1550bf8f6a19bb8641c5';
+    r'e5f5eaeb8e6253b077ca9ace9f60209a64ec3d17';
 
 /// See also [ScheduleListNotifier].
 @ProviderFor(ScheduleListNotifier)

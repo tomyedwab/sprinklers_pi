@@ -18,6 +18,7 @@ class ScheduleEditModal extends ConsumerStatefulWidget {
 
 class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
   late final TextEditingController _nameController;
+  late final int? _id;
   late bool _isEnabled;
   late bool _isDayBased;
   late int _interval;
@@ -37,6 +38,7 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
     super.initState();
     final schedule = widget.schedule;
     if (schedule != null) {
+      _id = schedule.id;
       _nameController = TextEditingController(text: schedule.name);
       _isEnabled = schedule.isEnabled;
       _isDayBased = schedule.type == ScheduleType.dayBased;
@@ -49,9 +51,19 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
       _isThursdayEnabled = schedule.days[4];
       _isFridayEnabled = schedule.days[5];
       _isSaturdayEnabled = schedule.days[6];
-      _times = List.of(schedule.times);
-      _zones = List.of(schedule.zones);
+      // Only keep enabled times
+      _times = schedule.times.where((t) => t.isEnabled).map((t) => 
+        ScheduleTime(time: t.time, isEnabled: true)
+      ).toList();
+      // Ensure we keep the same zone array size and IDs
+      _zones = List.filled(schedule.zones.length, const ScheduleZone(duration: 0, isEnabled: false));
+      for (var i = 0; i < schedule.zones.length; i++) {
+        if (i < schedule.zones.length) {
+          _zones[i] = schedule.zones[i];
+        }
+      }
     } else {
+      _id = null;
       _nameController = TextEditingController();
       _isEnabled = true;
       _isDayBased = true;
@@ -80,8 +92,17 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
   Future<void> _save() async {
     if (!_validateForm()) return;
 
+    // Clean up zones:
+    // - Set disabled zones to zero duration
+    // - Treat zero duration as disabled
+    final cleanedZones = _zones.map((zone) => 
+      zone.isEnabled && zone.duration > 0
+          ? zone
+          : zone.copyWith(isEnabled: false, duration: 0)
+    ).toList();
+
     final schedule = ScheduleDetail(
-      id: widget.schedule?.id ?? 0,  // API will assign real ID for new schedules
+      id: _id,
       name: _nameController.text,
       isEnabled: _isEnabled,
       type: _isDayBased ? ScheduleType.dayBased : ScheduleType.intervalBased,
@@ -98,7 +119,7 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
         _isSaturdayEnabled,
       ],
       times: _times,
-      zones: _zones,
+      zones: cleanedZones,
     );
 
     try {
@@ -141,16 +162,16 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
       return false;
     }
 
-    if (_times.isEmpty || !_times.any((t) => t.isEnabled)) {
+    if (_times.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one enabled time')),
+        const SnackBar(content: Text('Please add at least one start time')),
       );
       return false;
     }
 
-    if (!_zones.any((z) => z.isEnabled)) {
+    if (!_zones.any((z) => z.isEnabled && z.duration > 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enable at least one zone')),
+        const SnackBar(content: Text('Please enable at least one zone with a duration greater than 0')),
       );
       return false;
     }
@@ -189,11 +210,11 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                   ),
                 );
 
-                if (confirmed == true && mounted) {
+                if (confirmed == true && mounted && widget.schedule?.id != null) {
                   try {
                     await ref
                         .read(scheduleListNotifierProvider.notifier)
-                        .deleteSchedule(widget.schedule!.id);
+                        .deleteSchedule(widget.schedule!.id!);
                     if (mounted) {
                       Navigator.of(context).pop(true);
                     }
@@ -372,52 +393,58 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  ..._times.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final time = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: time.isEnabled,
-                            onChanged: (value) => setState(() {
-                              _times[index] = time.copyWith(isEnabled: value ?? false);
-                            }),
+                  if (_times.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Center(
+                        child: Text(
+                          'Add a start time',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.textTheme.bodySmall?.color,
                           ),
-                          Expanded(
-                            child: TextButton(
-                              onPressed: () async {
-                                final result = await showTimePicker(
-                                  context: context,
-                                  initialTime: TimeOfDay(
-                                    hour: int.parse(time.time.split(':')[0]),
-                                    minute: int.parse(time.time.split(':')[1]),
-                                  ),
-                                );
-                                if (result != null) {
-                                  setState(() {
-                                    _times[index] = time.copyWith(
-                                      time: '${result.hour.toString().padLeft(2, '0')}:'
-                                          '${result.minute.toString().padLeft(2, '0')}',
-                                    );
-                                  });
-                                }
-                              },
-                              child: Text(time.time),
+                        ),
+                      ),
+                    )
+                  else
+                    ..._times.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final time = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () async {
+                                  final result = await showTimePicker(
+                                    context: context,
+                                    initialTime: TimeOfDay(
+                                      hour: int.parse(time.time.split(':')[0]),
+                                      minute: int.parse(time.time.split(':')[1]),
+                                    ),
+                                  );
+                                  if (result != null) {
+                                    setState(() {
+                                      _times[index] = time.copyWith(
+                                        time: '${result.hour.toString().padLeft(2, '0')}:'
+                                            '${result.minute.toString().padLeft(2, '0')}',
+                                      );
+                                    });
+                                  }
+                                },
+                                child: Text(time.time),
+                              ),
                             ),
-                          ),
-                          if (_times.length > 1)
                             IconButton(
                               icon: const Icon(Icons.delete),
                               onPressed: () => setState(() {
                                 _times.removeAt(index);
                               }),
                             ),
-                        ],
-                      ),
-                    );
-                  }),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                 ],
               ),
             ),
@@ -434,64 +461,89 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                   Text('Zone Durations', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   ref.watch(zonesNotifierProvider).when(
-                    data: (zones) => Column(
-                      children: zones.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final zone = entry.value;
-                        final scheduleZone = _zones.length > index
-                            ? _zones[index]
-                            : ScheduleZone(
-                                duration: 15,  // Default 15 minutes
-                                isEnabled: false,
-                              );
-                        
-                        // Ensure _zones has enough entries
-                        while (_zones.length <= index) {
-                          _zones.add(ScheduleZone(
-                            duration: 15,  // Default 15 minutes
-                            isEnabled: false,
-                          ));
-                        }
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: [
-                              Checkbox(
-                                value: scheduleZone.isEnabled,
-                                onChanged: (value) => setState(() {
-                                  _zones[index] = scheduleZone.copyWith(
-                                    isEnabled: value ?? false,
-                                  );
-                                }),
-                              ),
-                              Expanded(
-                                child: Text(zone.name),
-                              ),
-                              SizedBox(
-                                width: 80,
-                                child: TextFormField(
-                                  initialValue: scheduleZone.duration.toString(),
-                                  keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
-                                    suffixText: 'min',
-                                    isDense: true,
-                                  ),
-                                  onChanged: (value) {
-                                    final minutes = int.tryParse(value) ?? 0;
-                                    setState(() {
-                                      _zones[index] = scheduleZone.copyWith(
-                                        duration: minutes.clamp(0, 255),
-                                      );
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
+                    data: (zones) {
+                      // Get list of enabled zones
+                      final enabledZones = zones.where((z) => z.isEnabled).toList();
+                      
+                      if (enabledZones.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text(
+                              'No enabled zones available.\nEnable zones in the Zones tab.',
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         );
-                      }).toList(),
-                    ),
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Zone durations list
+                          ...enabledZones.map((zone) {
+                            final index = zones.indexOf(zone);
+                            final scheduleZone = _zones.length > index
+                                ? _zones[index]
+                                : ScheduleZone(
+                                    duration: 15,
+                                    isEnabled: false,
+                                  );
+                            
+                            // Ensure _zones has enough entries
+                            while (_zones.length <= index) {
+                              _zones.add(ScheduleZone(
+                                duration: 15,
+                                isEnabled: false,
+                              ));
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value: scheduleZone.isEnabled && scheduleZone.duration > 0,
+                                    onChanged: (value) => setState(() {
+                                      _zones[index] = scheduleZone.copyWith(
+                                        isEnabled: value ?? false,
+                                        // Set a default duration of 15 minutes when enabling
+                                        duration: value == true && scheduleZone.duration == 0 ? 15 : scheduleZone.duration,
+                                      );
+                                    }),
+                                  ),
+                                  Expanded(
+                                    child: Text(zone.name),
+                                  ),
+                                  SizedBox(
+                                    width: 80,
+                                    child: TextFormField(
+                                      initialValue: scheduleZone.duration.toString(),
+                                      keyboardType: TextInputType.number,
+                                      enabled: scheduleZone.isEnabled && scheduleZone.duration > 0,
+                                      decoration: const InputDecoration(
+                                        suffixText: 'min',
+                                        isDense: true,
+                                      ),
+                                      onChanged: (value) {
+                                        final minutes = int.tryParse(value) ?? 0;
+                                        setState(() {
+                                          _zones[index] = scheduleZone.copyWith(
+                                            duration: minutes.clamp(0, 255),
+                                            // Disable the zone if duration is set to 0
+                                            isEnabled: minutes > 0 && scheduleZone.isEnabled,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                      );
+                    },
                     loading: () => const Center(
                       child: CircularProgressIndicator(),
                     ),

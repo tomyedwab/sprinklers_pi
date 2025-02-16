@@ -277,24 +277,18 @@ None
 ## 2024-03-26 - Maya Patel
 
 ### Yesterday
-Refactored schedule models and UI for FLUTTER-303.
+Fixed schedule model implementation and UI integration:
+- Fixed API model conversion in schedule provider
+- Updated schedule edit modal
+- Fixed schedule saving and error handling
 
 ### Today
-Fixed schedule model implementation and UI integration:
-- Fixed API model conversion in schedule provider:
-  - Corrected model conversion using proper extension methods
-  - Simplified imports and removed unnecessary aliases
-  - Fixed schedule details conversion to properly handle IDs
-- Updated schedule edit modal:
-  - Changed schedule type handling to use proper enum
-  - Fixed day selection to use array access
-  - Corrected zone duration handling to use minutes as integers
-  - Added proper validation for all schedule fields
-  - Fixed schedule saving and error handling
-- Resolved all linter errors across:
-  - `api_client.dart`
-  - `schedule_provider.dart`
-  - `schedule_edit_modal.dart`
+Fixed schedule ID handling to properly support new and existing schedules:
+- Changed schedule ID to be nullable in `ScheduleDetail` model
+- Updated `toApiParams` to only include ID when editing existing schedules
+- Fixed schedule edit modal to properly handle nullable IDs
+- Fixed delete action to safely handle nullable IDs
+- Resolved issue where new schedules were overwriting each other with ID 0
 
 ### Blockers
 None

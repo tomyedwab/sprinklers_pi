@@ -72,7 +72,7 @@ FLUTTER-302: Zone Management (Assigned: David Kim, Status: Done)
 - Pump association settings
 - Real-time status updates
 
-FLUTTER-303: Schedule Management (Assigned: Maya Patel)
+FLUTTER-303: Schedule Management (Assigned: Maya Patel, Status: Done)
 - Schedule list view
 - Schedule creation/editing
 - Time slot management

@@ -21,12 +21,9 @@ class ScheduleListNotifier extends _$ScheduleListNotifier {
   Future<ScheduleDetail> getScheduleDetails(int id) async {
     final apiClient = ref.read(apiClientProvider);
     final apiSchedule = await apiClient.getSchedule(id);
-    final scheduleList = await future;
-    final listItem = scheduleList.firstWhere(
-      (s) => s.id == id,
-      orElse: () => throw Exception('Schedule not found'),
-    );
-    return apiSchedule.toModel().copyWith(id: id);
+    final model = apiSchedule.toModel();
+    final result = model.copyWith(id: id);
+    return result;
   }
 
   Future<void> deleteSchedule(int id) async {

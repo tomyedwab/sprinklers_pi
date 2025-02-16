@@ -58,7 +58,7 @@ class ScheduleDetail with _$ScheduleDetail {
     required List<bool> days,  // Sunday to Saturday
     required List<ScheduleTime> times,
     required List<ScheduleZone> zones,
-    @Default(0) int id,  // Default to 0 for new schedules
+    @Default(null) int? id,  // Nullable ID, null for new schedules
   }) = _ScheduleDetail;
 
   const ScheduleDetail._();
@@ -115,6 +115,7 @@ extension ApiScheduleDetailX on ApiScheduleDetail {
 extension ScheduleDetailX on ScheduleDetail {
   Map<String, String> toApiParams() {
     final params = <String, String>{
+      if (id != null) 'id': id.toString(),  // Only include ID if it exists
       'name': name,
       'enable': isEnabled ? 'on' : 'off',
       'type': isDayBased ? 'on' : 'off',
