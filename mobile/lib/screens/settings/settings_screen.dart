@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:webview_cookie_jar/webview_cookie_jar.dart';
+import 'package:sprinklers_pi/api/api_config.dart';
 import '../../models/settings.dart';
 import '../../models/connection_settings.dart';
 import '../../providers/settings_provider.dart';
@@ -427,6 +429,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           );
 
                           if (shouldLogout == true && mounted) {
+                            // Clear the cookies
+                            await WebViewCookieJar.cookieJar.deleteAll();
+                            
                             // Clear the connection settings
                             await ref.read(connectionSettingsProvider.notifier).updateSettings(
                               ConnectionSettings.defaultSettings,

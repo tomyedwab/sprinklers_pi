@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:webview_cookie_jar/webview_cookie_jar.dart';
 import 'api_config.dart';
 import 'models/zone.dart';
 import 'models/system_state.dart';
@@ -11,15 +13,21 @@ import '../models/schedule.dart' as app_model;
 import '../models/settings.dart' as app_model;
 import 'models/weather_check.dart';
 import 'models/quick_schedule.dart';
-import '../providers/connection_settings_provider.dart';
 
 part 'api_client.g.dart';
 
 class ApiException implements Exception {
   final String message;
   final int? statusCode;
+  final String? redirectLocation;
 
-  ApiException(this.message, [this.statusCode]);
+  ApiException(
+    this.message, [
+    this.statusCode,
+    this.redirectLocation,
+  ]);
+
+  bool get isRedirect => statusCode == 302 && redirectLocation != null;
 
   @override
   String toString() => 'ApiException: $message${statusCode != null ? ' (Status: $statusCode)' : ''}';
@@ -44,12 +52,31 @@ class ApiClient {
     return uri;
   }
 
+  static bool get needsWebCookies {
+    if (kIsWeb) {
+      return false;
+    }
+    // On android in production, we need to use login cookies we get from the
+    // webview
+    return true;
+  }
+
   /// Generic GET request handler
   Future<Map<String, dynamic>> _get(String endpoint, [Map<String, dynamic>? queryParams]) async {
     try {
-      final response = await _client
-          .get(_buildUrl(endpoint, queryParams))
-          .timeout(ApiConfig.timeout);
+      final request = http.Request('GET', _buildUrl(endpoint, queryParams))
+        ..followRedirects = false
+        ..maxRedirects = 0;
+
+      if (needsWebCookies) {
+        final cookies = await WebViewCookieJar.cookieJar.loadForRequest(request.url);
+        request.headers['Cookie'] = cookies.map((c) => '${c.name}=${c.value}').join('; ');
+        print("Cookie: ${request.headers['Cookie']}");
+      }
+      
+      final response = await _client.send(request)
+          .timeout(ApiConfig.timeout)
+          .then(http.Response.fromStream);
 
       if (response.statusCode == 200) {
         // Handle empty responses (like from setZones)
@@ -57,6 +84,14 @@ class ApiClient {
           return {};
         }
         return json.decode(response.body) as Map<String, dynamic>;
+      } else if (response.statusCode == 302) {
+        // Handle redirect responses
+        final location = response.headers['location'];
+        throw ApiException(
+          'Authentication required',
+          response.statusCode,
+          location,
+        );
       } else {
         throw ApiException('Request failed', response.statusCode);
       }

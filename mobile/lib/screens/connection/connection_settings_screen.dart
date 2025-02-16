@@ -5,6 +5,7 @@ import '../../providers/connection_settings_provider.dart';
 import '../../api/api_client.dart';
 import '../../api/api_config.dart';
 import '../../navigation/app_router.dart';
+import '../../providers/auth_provider.dart';
 
 class ConnectionSettingsScreen extends ConsumerStatefulWidget {
   /// If true, this screen was shown due to a connection error
@@ -66,17 +67,38 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
       originalUrl = settings.baseUrl;
     });
     
+    // Create a temporary API client
+    final testClient = ApiClient();
+    
     try {
       // Temporarily set the API URL for testing
       ApiConfig.setBaseUrl(url);
-      
-      // Create a temporary API client
-      final testClient = ApiClient();
       
       // Try to get the system state as a connection test
       await testClient.getSystemState();
       return true;
     } catch (e) {
+      if (e is ApiException && e.isRedirect) {
+        // If we got a redirect, that means the server is reachable
+        // Show the auth screen and wait for completion
+        if (!mounted) return false;
+        final authSuccess = await ref.read(authProvider.notifier).handleApiError(context, e);
+        
+        if (authSuccess) {
+          // Try the connection test again after successful authentication
+          try {
+            await testClient.getSystemState();
+            return true;
+          } catch (retryError) {
+            // If we still get an error after auth, treat it as a connection failure
+            if (originalUrl?.isNotEmpty ?? false) {
+              ApiConfig.setBaseUrl(originalUrl!);
+            }
+            return false;
+          }
+        }
+      }
+
       // Only restore the original URL if the test failed and we had a previous URL
       if (originalUrl?.isNotEmpty ?? false) {
         ApiConfig.setBaseUrl(originalUrl!);

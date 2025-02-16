@@ -138,7 +138,7 @@ FLUTTER-401: Connection settings (Assigned: Luis Rodriguez, Status: Done)
 - Local storage of connection settings
 - Connection settings view
 
-FLUTTER-402: Authentication (Assigned: Luis Rodriguez)
+FLUTTER-402: Authentication (Assigned: Luis Rodriguez, Status: Done)
 - Detect 302 response codes in API responses
 - Web view for facilitating login
 - Shared cookies between web view and API client

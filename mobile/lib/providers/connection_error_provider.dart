@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../navigation/app_router.dart';
+import 'auth_provider.dart';
 
 /// Provider to handle connection errors and automatic navigation
 /// to the connection settings screen
@@ -13,7 +14,7 @@ class ConnectionErrorNotifier extends Notifier<bool> {
   @override
   bool build() => false;  // Initially no error
 
-  /// Handle an API error and show the connection settings screen if needed
+  /// Handle an API error and show the appropriate screen
   Future<void> handleError(BuildContext context, Object error) async {
     if (error is ApiException) {
       // If we're already showing an error, don't stack them
@@ -21,10 +22,15 @@ class ConnectionErrorNotifier extends Notifier<bool> {
 
       state = true;
 
-      // Show connection settings screen using the router
-      if (!context.mounted) return;
-      final router = Router.of(context).routerDelegate as AppRouterDelegate;
-      router.showConnectionSettings();
+      if (error.isRedirect) {
+        // Handle auth redirects
+        await ref.read(authProvider.notifier).handleApiError(context, error);
+      } else {
+        // Show connection settings screen for other errors
+        if (!context.mounted) return;
+        final router = Router.of(context).routerDelegate as AppRouterDelegate;
+        router.showConnectionSettings();
+      }
 
       state = false;
     }
