@@ -5,6 +5,8 @@ import '../../../providers/zone_provider.dart';
 import '../../../api/models/log.dart' as api;
 import '../../../models/log.dart';
 import '../../../api/models/zone.dart';
+import '../../../widgets/standard_error_widget.dart';
+import '../../../widgets/loading_states.dart';
 
 // TODO: Fix graph x axis scaling
 
@@ -175,29 +177,14 @@ class _LogViewerState extends ConsumerState<LogViewer> {
               const SizedBox(height: 8),
               // Zone filters
               zones.when(
-                data: (zones) => Wrap(
-                  spacing: 8,
-                  children: zones
-                      .where((zone) => zone.isEnabled)
-                      .map(
-                        (zone) => FilterChip(
-                          label: Text(zone.name),
-                          selected: _selectedZones.contains(zone.id),
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedZones.add(zone.id);
-                              } else {
-                                _selectedZones.remove(zone.id);
-                              }
-                            });
-                          },
-                        ),
-                      )
-                      .toList(),
+                data: (zones) => _buildZoneFilter(zones),
+                loading: () => const SizedBox(height: 52),  // Match filter height
+                error: (_, __) => StandardErrorWidget(
+                  message: 'Failed to load zones',
+                  type: ErrorType.network,
+                  showRetry: true,
+                  onPrimaryAction: () => ref.refresh(zonesNotifierProvider),
                 ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, __) => const Text('Failed to load zones'),
               ),
               // Search filter (only for table view)
               if (_viewType == ViewType.table) ...[
@@ -241,9 +228,25 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                   return _buildGraphView(data as Map<int, List<GraphPoint>>);
                 }
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: 5,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: SkeletonCard(
+                    height: 60,
+                    showHeader: false,
+                    contentLines: 2,
+                  ),
+                ),
+              ),
               error: (error, stackTrace) => Center(
-                child: Text('Error: $error'),
+                child: StandardErrorWidget(
+                  message: 'Failed to load logs: $error',
+                  type: ErrorType.network,
+                  showRetry: true,
+                  onPrimaryAction: _loadData,
+                ),
               ),
             ),
           ),
@@ -435,6 +438,30 @@ class _LogViewerState extends ConsumerState<LogViewer> {
         startDate: _startDate,
         endDate: _endDate,
       ),
+    );
+  }
+
+  Widget _buildZoneFilter(List<Zone> zones) {
+    return Wrap(
+      spacing: 8,
+      children: zones
+          .where((zone) => zone.isEnabled)
+          .map(
+            (zone) => FilterChip(
+              label: Text(zone.name),
+              selected: _selectedZones.contains(zone.id),
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedZones.add(zone.id);
+                  } else {
+                    _selectedZones.remove(zone.id);
+                  }
+                });
+              },
+            ),
+          )
+          .toList(),
     );
   }
 }

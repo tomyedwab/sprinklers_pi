@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../api/models/zone.dart';
 import '../../../providers/zone_provider.dart';
+import '../../../widgets/standard_error_widget.dart';
+import '../../../widgets/confirmation_dialogs.dart';
 
 class ZoneEditModal extends ConsumerStatefulWidget {
   final Zone zone;
@@ -19,6 +21,7 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
   late final TextEditingController _nameController;
   late bool _isEnabled;
   late bool _isPumpAssociated;
+  bool _hasChanges = false;
 
   @override
   void initState() {
@@ -26,12 +29,47 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
     _nameController = TextEditingController(text: widget.zone.name);
     _isEnabled = widget.zone.isEnabled;
     _isPumpAssociated = widget.zone.isPumpAssociated;
+
+    _nameController.addListener(_checkForChanges);
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  void _checkForChanges() {
+    final hasChanges = _nameController.text != widget.zone.name ||
+        _isEnabled != widget.zone.isEnabled ||
+        _isPumpAssociated != widget.zone.isPumpAssociated;
+    
+    if (hasChanges != _hasChanges) {
+      setState(() {
+        _hasChanges = hasChanges;
+      });
+    }
+  }
+
+  Future<void> _confirmClose() async {
+    if (!_hasChanges) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final shouldDiscard = await showDialog<bool>(
+      context: context,
+      builder: (context) => ConfirmActionDialog(
+        title: 'Discard Changes',
+        message: 'You have unsaved changes. Are you sure you want to discard them?',
+        confirmText: 'Discard',
+        isDestructive: true,
+      ),
+    );
+
+    if (shouldDiscard == true && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _saveChanges() async {
@@ -52,8 +90,16 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update zone: $e'),
-            backgroundColor: Colors.red,
+            content: StandardErrorWidget(
+              message: 'Failed to update zone: $e',
+              type: ErrorType.network,
+              showRetry: true,
+              onPrimaryAction: _saveChanges,
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -80,7 +126,7 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: _confirmClose,
                 ),
               ],
             ),
@@ -97,16 +143,22 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
             SwitchListTile(
               title: const Text('Enabled'),
               value: _isEnabled,
-              onChanged: (value) => setState(() => _isEnabled = value),
+              onChanged: (value) {
+                setState(() => _isEnabled = value);
+                _checkForChanges();
+              },
             ),
             SwitchListTile(
               title: const Text('Pump Associated'),
               value: _isPumpAssociated,
-              onChanged: (value) => setState(() => _isPumpAssociated = value),
+              onChanged: (value) {
+                setState(() => _isPumpAssociated = value);
+                _checkForChanges();
+              },
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _saveChanges,
+            FilledButton(
+              onPressed: _hasChanges ? _saveChanges : null,
               child: const Text('Save Changes'),
             ),
           ],

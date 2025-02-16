@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/settings.dart';
 import '../../providers/settings_provider.dart';
-import '../../widgets/loading_overlay.dart';
+import '../../widgets/loading_states.dart';
+import '../../widgets/standard_error_widget.dart';
+import '../../widgets/confirmation_dialogs.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -13,6 +15,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _hasUnsavedChanges = false;
   
   // Form controllers
   late final TextEditingController _webPortController;
@@ -32,6 +35,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _weatherApiSecretController = TextEditingController();
     _locationController = TextEditingController();
     _seasonalAdjustmentController = TextEditingController();
+
+    // Add listeners to detect changes
+    _webPortController.addListener(_onFormChanged);
+    _weatherServiceIpController.addListener(_onFormChanged);
+    _weatherApiSecretController.addListener(_onFormChanged);
+    _locationController.addListener(_onFormChanged);
+    _seasonalAdjustmentController.addListener(_onFormChanged);
   }
 
   @override
@@ -44,6 +54,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
+  void _onFormChanged() {
+    if (!_hasUnsavedChanges) {
+      setState(() => _hasUnsavedChanges = true);
+    }
+  }
+
   void _updateFormFromSettings(Settings settings) {
     _webPortController.text = settings.webPort.toString();
     _weatherServiceIpController.text = settings.weatherServiceIp;
@@ -52,6 +68,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _seasonalAdjustmentController.text = settings.seasonalAdjustment.toString();
     setState(() {
       _outputType = settings.outputType;
+      _hasUnsavedChanges = false;
     });
   }
 
@@ -66,11 +83,71 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _saveSettings() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _confirmDiscard() async {
+    if (!_hasUnsavedChanges) return;
 
-    final settings = _buildSettingsFromForm();
-    await ref.read(settingsNotifierProvider.notifier).saveSettings(settings);
+    final shouldDiscard = await showDialog<bool>(
+      context: context,
+      builder: (context) => const ConfirmActionDialog(
+        title: 'Discard Changes',
+        message: 'You have unsaved changes. Are you sure you want to discard them?',
+        confirmText: 'Discard',
+        icon: Icons.delete_outline,
+        isDestructive: true,
+      ),
+    );
+
+    if (shouldDiscard == true && mounted) {
+      ref.invalidate(settingsNotifierProvider);
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const StandardErrorWidget(
+            message: 'Please fix the errors in the form',
+            type: ErrorType.validation,
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final settings = _buildSettingsFromForm();
+      await ref.read(settingsNotifierProvider.notifier).saveSettings(settings);
+      if (mounted) {
+        setState(() => _hasUnsavedChanges = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Settings saved successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: StandardErrorWidget(
+              message: 'Failed to save settings',
+              type: ErrorType.network,
+              showRetry: true,
+              onPrimaryAction: _saveSettings,
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -88,17 +165,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(settingsNotifierProvider),
+            onPressed: _confirmDiscard,
           ),
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _saveSettings,
+            onPressed: _hasUnsavedChanges ? _saveSettings : null,
           ),
         ],
       ),
       body: settingsAsync.when(
         data: (settings) => Form(
           key: _formKey,
+          onWillPop: () async {
+            if (!_hasUnsavedChanges) return true;
+            await _confirmDiscard();
+            return false;
+          },
           child: ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
@@ -190,6 +272,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   if (value != null) {
                     setState(() {
                       _outputType = value;
+                      _hasUnsavedChanges = true;
                     });
                   }
                 },
@@ -217,9 +300,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
         ),
-        loading: () => const LoadingOverlay(),
+        loading: () => ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: 3,
+          itemBuilder: (context, index) => Padding(
+            padding: const EdgeInsets.only(bottom: 24.0),
+            child: SkeletonCard(
+              height: index == 0 ? 80 : 160,
+              showHeader: true,
+              contentLines: index == 0 ? 1 : 3,
+              showActions: false,
+            ),
+          ),
+        ),
         error: (error, stack) => Center(
-          child: Text('Error: $error'),
+          child: StandardErrorWidget(
+            message: 'Failed to load settings',
+            type: ErrorType.network,
+            showRetry: true,
+            onPrimaryAction: () => ref.refresh(settingsNotifierProvider),
+          ),
         ),
       ),
     );

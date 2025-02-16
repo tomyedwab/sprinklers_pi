@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/weather_provider.dart';
+import '../../../widgets/standard_error_widget.dart';
+import '../../../widgets/loading_states.dart';
 
 class WeatherDiagnostics extends ConsumerWidget {
   const WeatherDiagnostics({super.key});
@@ -31,189 +33,90 @@ class WeatherDiagnostics extends ConsumerWidget {
                   weatherData.when(
                     data: (data) {
                       if (data.noProvider) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Status: Not Configured',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Configure weather provider in settings to enable weather-based adjustments.',
-                            ),
-                          ],
+                        return StandardErrorWidget(
+                          message: 'Weather provider not configured',
+                          type: ErrorType.generic,
+                          primaryActionText: 'Configure',
+                          onPrimaryAction: () {
+                            // TODO: Navigate to settings
+                          },
+                          secondaryActionText: 'Learn More',
+                          onSecondaryAction: () {
+                            // TODO: Show documentation
+                          },
                         );
                       }
 
                       if (data.keyNotFound) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Status: Invalid API Key',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Check your weather provider API key in settings.',
-                            ),
-                            if (data.resolvedIP != null) ...[
-                              const SizedBox(height: 8),
-                              Text('Service IP: ${data.resolvedIP}'),
-                            ],
-                          ],
+                        return StandardErrorWidget(
+                          message: 'Invalid weather provider API key',
+                          type: ErrorType.validation,
+                          primaryActionText: 'Update Key',
+                          onPrimaryAction: () {
+                            // TODO: Navigate to settings
+                          },
                         );
                       }
 
                       if (!data.valid) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Status: Invalid Data',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Weather data is not valid. Check your configuration.',
-                            ),
-                            if (data.resolvedIP != null) ...[
-                              const SizedBox(height: 8),
-                              Text('Service IP: ${data.resolvedIP}'),
-                            ],
-                          ],
+                        return StandardErrorWidget(
+                          message: 'Invalid response from weather provider',
+                          type: ErrorType.network,
+                          showRetry: true,
+                          onPrimaryAction: () => ref.refresh(weatherNotifierProvider),
                         );
                       }
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Status: Connected',
-                            style: TextStyle(color: Colors.green),
-                          ),
-                          if (data.resolvedIP != null) ...[
-                            const SizedBox(height: 8),
-                            Text('Service IP: ${data.resolvedIP}'),
-                          ],
-                        ],
-                      );
-                    },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    error: (error, _) => Text(
-                      'Error: $error',
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: () {
-                      ref.read(weatherNotifierProvider.notifier).refresh();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Test Connection'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Current Weather Data',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  weatherData.when(
-                    data: (data) {
-                      if (!data.valid || data.noProvider || data.keyNotFound) {
-                        return const Text('No weather data available');
-                      }
-
-                      return Column(
-                        children: [
-                          _buildDataRow(
-                            'Temperature',
-                            '${data.meanTemperature.toStringAsFixed(1)}°F',
-                          ),
-                          _buildDataRow(
-                            'Humidity',
-                            '${data.minHumidity}% - ${data.maxHumidity}%',
-                          ),
-                          _buildDataRow(
-                            'Precipitation (Yesterday)',
-                            '${data.precipitation.toStringAsFixed(2)} in',
-                          ),
-                          _buildDataRow(
-                            'Precipitation (Today)',
-                            '${data.precipitationToday.toStringAsFixed(2)} in',
-                          ),
-                          _buildDataRow(
-                            'Wind Speed',
-                            '${data.windSpeed.toStringAsFixed(1)} mph',
-                          ),
-                          _buildDataRow(
-                            'UV Index',
-                            (data.uvIndex / 10).toStringAsFixed(1),
-                          ),
+                          Text('Status: Connected'),
+                          const SizedBox(height: 8),
+                          Text('Provider IP: ${data.resolvedIP}'),
+                          const SizedBox(height: 16),
+                          Text('Overall Scale: ${data.scale}%'),
                           const Divider(),
-                          _buildDataRow(
-                            'Watering Adjustment',
-                            '${data.scale}%',
-                            valueColor: data.scale < 100 
-                              ? Colors.red 
-                              : data.scale > 100 
-                                ? Colors.green 
-                                : null,
+                          const Text(
+                            "Yesterday's Values",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
+                          const SizedBox(height: 8),
+                          Text('Mean Temperature: ${data.meanTemperature}°F'),
+                          Text('Humidity: ${data.minHumidity}% - ${data.maxHumidity}%'),
+                          Text('Precipitation: ${data.precipitation} inches'),
+                          Text('Wind: ${data.windSpeed} mph'),
+                          const Divider(),
+                          const Text(
+                            "Today's Values",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Precipitation: ${data.precipitationToday} inches'),
+                          Text('UV Index: ${data.uvIndex}'),
                         ],
                       );
                     },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
+                    loading: () => const SkeletonCard(
+                      height: 300,
+                      showHeader: true,
+                      contentLines: 8,
+                      showActions: false,
                     ),
-                    error: (error, _) => Text(
-                      'Error: $error',
-                      style: const TextStyle(color: Colors.red),
+                    error: (error, stack) => StandardErrorWidget(
+                      message: 'Failed to load weather data: $error',
+                      type: ErrorType.network,
+                      showRetry: true,
+                      onPrimaryAction: () => ref.refresh(weatherNotifierProvider),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataRow(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontWeight: valueColor != null ? FontWeight.w500 : null,
             ),
           ),
         ],

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/system_state_provider.dart';
 import '../../../api/api_client.dart';
+import '../../../widgets/standard_error_widget.dart';
+import '../../../widgets/loading_states.dart';
+import '../../../widgets/confirmation_dialogs.dart';
 
 class SystemMaintenance extends ConsumerWidget {
   const SystemMaintenance({super.key});
@@ -50,10 +53,17 @@ class SystemMaintenance extends ConsumerWidget {
                         ],
                       ],
                     ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => Text(
-                      'Error: $error',
-                      style: const TextStyle(color: Colors.red),
+                    loading: () => const SkeletonCard(
+                      height: 200,
+                      showHeader: false,
+                      contentLines: 6,
+                      showActions: false,
+                    ),
+                    error: (error, _) => StandardErrorWidget(
+                      message: 'Failed to load system information',
+                      type: ErrorType.network,
+                      showRetry: true,
+                      onPrimaryAction: () => ref.refresh(systemStateNotifierProvider),
                     ),
                   ),
                 ],
@@ -82,46 +92,53 @@ class SystemMaintenance extends ConsumerWidget {
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Reset System'),
-                          content: const Text(
-                            'Are you sure you want to reset the system? '
+                        builder: (context) => ConfirmActionDialog(
+                          title: 'Reset System',
+                          message: 'Are you sure you want to reset the system? '
                             'This will restart all services while maintaining your settings.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              onPressed: () async {
-                                try {
-                                  Navigator.of(context).pop();
-                                  final apiClient = ref.read(apiClientProvider);
-                                  await apiClient.resetSystem();
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('System reset initiated'),
-                                      ),
-                                    );
-                                  }
-                                  // Refresh system state after reset
-                                  ref.read(systemStateNotifierProvider.notifier).refresh();
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Failed to reset system: $e'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              child: const Text('Reset'),
-                            ),
-                          ],
+                          confirmText: 'Reset',
+                          icon: Icons.refresh,
+                          onConfirm: () async {
+                            try {
+                              final apiClient = ref.read(apiClientProvider);
+                              await apiClient.resetSystem();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: StandardErrorWidget(
+                                      message: 'System reset initiated',
+                                      type: ErrorType.generic,
+                                      primaryActionText: 'Refresh',
+                                      onPrimaryAction: () => ref.refresh(systemStateNotifierProvider),
+                                    ),
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    duration: const Duration(seconds: 5),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: StandardErrorWidget(
+                                      message: 'Failed to reset system',
+                                      type: ErrorType.network,
+                                      showRetry: true,
+                                      onPrimaryAction: () async {
+                                        final apiClient = ref.read(apiClientProvider);
+                                        await apiClient.resetSystem();
+                                        ref.refresh(systemStateNotifierProvider);
+                                      },
+                                    ),
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    duration: const Duration(seconds: 5),
+                                  ),
+                                );
+                              }
+                            }
+                          },
                         ),
                       );
                     },
@@ -136,54 +153,59 @@ class SystemMaintenance extends ConsumerWidget {
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Factory Reset'),
-                          content: const Text(
-                            'Are you sure you want to reset to factory defaults?\n\n'
+                        builder: (context) => ConfirmActionDialog(
+                          title: 'Factory Reset',
+                          message: 'Are you sure you want to reset to factory defaults?\n\n'
                             'This will erase ALL settings including:\n'
                             '• Zone configurations\n'
                             '• Schedules\n'
                             '• Network settings\n'
                             '• Weather provider settings\n\n'
                             'This action cannot be undone!',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.red,
-                              ),
-                              onPressed: () async {
-                                try {
-                                  Navigator.of(context).pop();
-                                  final apiClient = ref.read(apiClientProvider);
-                                  await apiClient.factoryReset();
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Factory reset initiated'),
-                                      ),
-                                    );
-                                  }
-                                  // Refresh system state after reset
-                                  ref.read(systemStateNotifierProvider.notifier).refresh();
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Failed to factory reset: $e'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              child: const Text('Reset'),
-                            ),
-                          ],
+                          confirmText: 'Reset',
+                          icon: Icons.restore,
+                          isDestructive: true,
+                          onConfirm: () async {
+                            try {
+                              final apiClient = ref.read(apiClientProvider);
+                              await apiClient.factoryReset();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: StandardErrorWidget(
+                                      message: 'Factory reset initiated',
+                                      type: ErrorType.generic,
+                                      primaryActionText: 'Refresh',
+                                      onPrimaryAction: () => ref.refresh(systemStateNotifierProvider),
+                                    ),
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    duration: const Duration(seconds: 5),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: StandardErrorWidget(
+                                      message: 'Failed to factory reset',
+                                      type: ErrorType.network,
+                                      showRetry: true,
+                                      onPrimaryAction: () async {
+                                        final apiClient = ref.read(apiClientProvider);
+                                        await apiClient.factoryReset();
+                                        ref.refresh(systemStateNotifierProvider);
+                                      },
+                                    ),
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    duration: const Duration(seconds: 5),
+                                  ),
+                                );
+                              }
+                            }
+                          },
                         ),
                       );
                     },

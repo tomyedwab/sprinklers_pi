@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/schedule.dart';
 import '../../../providers/schedule_provider.dart';
 import '../../../providers/zone_provider.dart';
+import '../../../widgets/standard_error_widget.dart';
+import '../../../widgets/confirmation_dialogs.dart';
 
 class ScheduleEditModal extends ConsumerStatefulWidget {
   final ScheduleDetail? schedule;
@@ -132,46 +134,51 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save schedule: $e')),
+          SnackBar(
+            content: StandardErrorWidget(
+              message: 'Failed to save schedule: $e',
+              type: ErrorType.network,
+              showRetry: true,
+              onPrimaryAction: _save,
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
   }
 
   bool _validateForm() {
+    String? errorMessage;
+
     if (_nameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a schedule name')),
-      );
-      return false;
-    }
-
-    if (_nameController.text.length > 19) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Schedule name must be 19 characters or less')),
-      );
-      return false;
-    }
-
-    if (_isDayBased && !_isSundayEnabled && !_isMondayEnabled && 
+      errorMessage = 'Please enter a schedule name';
+    } else if (_nameController.text.length > 19) {
+      errorMessage = 'Schedule name must be 19 characters or less';
+    } else if (_isDayBased && !_isSundayEnabled && !_isMondayEnabled && 
         !_isTuesdayEnabled && !_isWednesdayEnabled && !_isThursdayEnabled && 
         !_isFridayEnabled && !_isSaturdayEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one day')),
-      );
-      return false;
+      errorMessage = 'Please select at least one day';
+    } else if (_times.isEmpty) {
+      errorMessage = 'Please add at least one start time';
+    } else if (!_zones.any((z) => z.isEnabled && z.duration > 0)) {
+      errorMessage = 'Please enable at least one zone with a duration greater than 0';
     }
 
-    if (_times.isEmpty) {
+    if (errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one start time')),
-      );
-      return false;
-    }
-
-    if (!_zones.any((z) => z.isEnabled && z.duration > 0)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enable at least one zone with a duration greater than 0')),
+        SnackBar(
+          content: StandardErrorWidget(
+            message: errorMessage,
+            type: ErrorType.validation,
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return false;
     }
@@ -194,37 +201,51 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
               onPressed: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Delete Schedule'),
-                    content: Text('Are you sure you want to delete "${_nameController.text}"?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Delete'),
-                      ),
-                    ],
+                  builder: (context) => ConfirmScheduleDeleteDialog(
+                    scheduleName: _nameController.text,
+                    onConfirm: () async {
+                      if (widget.schedule?.id != null) {
+                        try {
+                          await ref
+                              .read(scheduleListNotifierProvider.notifier)
+                              .deleteSchedule(widget.schedule!.id!);
+                          if (mounted) {
+                            Navigator.of(context).pop(true);
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: StandardErrorWidget(
+                                  message: 'Failed to delete schedule: $e',
+                                  type: ErrorType.network,
+                                  showRetry: true,
+                                  onPrimaryAction: () async {
+                                    if (widget.schedule?.id != null) {
+                                      await ref
+                                          .read(scheduleListNotifierProvider.notifier)
+                                          .deleteSchedule(widget.schedule!.id!);
+                                      if (mounted) {
+                                        Navigator.of(context).pop(true);
+                                      }
+                                    }
+                                  },
+                                ),
+                                backgroundColor: Colors.transparent,
+                                elevation: 0,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
                   ),
                 );
 
-                if (confirmed == true && mounted && widget.schedule?.id != null) {
-                  try {
-                    await ref
-                        .read(scheduleListNotifierProvider.notifier)
-                        .deleteSchedule(widget.schedule!.id!);
-                    if (mounted) {
-                      Navigator.of(context).pop(true);
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to delete schedule: $e')),
-                      );
-                    }
-                  }
+                if (confirmed == true && mounted) {
+                  Navigator.of(context).pop(true);
                 }
               },
             ),

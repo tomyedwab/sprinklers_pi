@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/schedule_provider.dart';
 import '../../providers/schedule_zone_provider.dart';
 import '../../models/schedule.dart';
+import '../../widgets/loading_states.dart';
+import '../../widgets/confirmation_dialogs.dart';
+import '../../widgets/standard_error_widget.dart';
 import 'widgets/schedule_edit_modal.dart';
 
 class SchedulesScreen extends ConsumerWidget {
@@ -44,26 +47,18 @@ class SchedulesScreen extends ConsumerWidget {
                   onDelete: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete Schedule'),
-                        content: Text('Are you sure you want to delete "${schedules[index].name}"?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Delete'),
-                          ),
-                        ],
+                      builder: (context) => ConfirmScheduleDeleteDialog(
+                        scheduleName: schedules[index].name,
+                        onConfirm: () async {
+                          await ref
+                              .read(scheduleListNotifierProvider.notifier)
+                              .deleteSchedule(schedules[index].id);
+                        },
                       ),
                     );
 
                     if (confirmed == true) {
-                      await ref
-                          .read(scheduleListNotifierProvider.notifier)
-                          .deleteSchedule(schedules[index].id);
+                      ref.invalidate(scheduleListNotifierProvider);
                     }
                   },
                   onToggle: (enabled) async {
@@ -77,19 +72,25 @@ class SchedulesScreen extends ConsumerWidget {
                   },
                 ),
               ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: 3,
+          itemBuilder: (context, index) => Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: SkeletonCard(
+              height: 80,
+              showHeader: false,
+              contentLines: 2,
+              showActions: true,
+            ),
+          ),
+        ),
         error: (error, stack) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Failed to load schedules'),
-              const SizedBox(height: 8),
-              ElevatedButton.icon(
-                onPressed: () => ref.refresh(scheduleListNotifierProvider),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
+          child: StandardErrorWidget(
+            message: 'Failed to load schedules',
+            type: ErrorType.network,
+            showRetry: true,
+            onPrimaryAction: () => ref.refresh(scheduleListNotifierProvider),
           ),
         ),
       ),

@@ -39,15 +39,47 @@ FLUTTER-201: Navigation Structure (Assigned: Maya Patel. Status: Done)
   - Settings
 - Implement named routes for detailed views
 
-FLUTTER-202: Shared Widgets (Assigned: David Kim)
-- Create reusable widgets:
-  - Zone toggles
-  - Duration pickers
-  - Time selectors
-  - Day-of-week selectors
-  - Loading indicators
-  - Error messages
-  - Confirmation dialogs
+FLUTTER-202: Shared Widgets (Assigned: David Kim. Status: Done)
+1. **Zone Toggle Widget** (`ZoneToggleWidget`)
+   - Handles 0-based ID ↔ API ID conversion (0→'za')
+   - Visual states: Active/Inactive/Disabled
+   - Pump association indicator
+   - Unified tap/long-press handling
+   - Required props: `zoneId`, `isEnabled`, `isRunning`, `hasPumpAssociation`
+2. **Duration Picker** (`DurationPickerDialog`)
+   - Combines TimePicker with duration limits
+   - Validation: 1-360 minutes
+   - API serialization helpers: `durationToApiFormat()`/`apiFormatToDuration()`
+   - Preset quick-select buttons (15/30/60 mins)
+3. **Day-of-Week Selector** (`DayOfWeekSelector`)
+   - Compact 7-day grid layout
+   - Multi-select support
+   - Visual states: Selected/Disabled/Partial
+   - Localization-ready (start week on Monday/Sunday)
+   - Compact mode for dialog embedding
+4. **Loading States** 
+   - `ShimmerEffect` widget with configurable shimmer
+   - `SkeletonCard` for dashboard items
+   - `LoadingErrorRetry` with error message + retry button
+5. **Confirmation Dialogs**
+   - `ConfirmActionDialog` base component
+   - Specialized versions:
+     - `ConfirmZoneStopDialog`
+     - `ConfirmScheduleDeleteDialog`
+     - `ConfirmWeatherProviderChangeDialog`
+6. **Error Messaging** (`StandardErrorWidget`)
+   - Consistent error display
+   - Retry/Cancel actions
+   - Supports icon variants (network error vs validation error)
+7. **Shared Widget Infrastructure**
+   - `shared_widgets/` directory structure
+   - Widget documentation (usage examples in Storybook format)
+   - Test coverage (widget tests + golden tests)
+   - Theme integration (uses ThemeData from FLUTTER-203)
+### Out of Scope
+- Form input fields (covered by FLUTTER-306)
+- Navigation elements (covered by FLUTTER-201)
+- Theme styling (handled by FLUTTER-203)
 
 FLUTTER-203: Theme and Styling (Assigned: Aisha Mohammed)
 - Create consistent Material/Cupertino design system
