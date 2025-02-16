@@ -7,6 +7,7 @@ import 'models/system_state.dart';
 import 'models/schedule.dart';
 import '../models/schedule.dart' as app_model;
 import 'models/weather_check.dart';
+import 'models/quick_schedule.dart';
 
 part 'api_client.g.dart';
 
@@ -183,6 +184,18 @@ class ApiClient {
       return ApiWeatherCheck.fromJson(response);
     } catch (e) {
       throw ApiException('Failed to get weather data: $e');
+    }
+  }
+
+  /// Execute a quick schedule
+  /// 
+  /// [request] contains either a schedule ID to run immediately
+  /// or a map of zone durations for a custom quick schedule
+  Future<void> executeQuickSchedule(ApiQuickScheduleRequest request) async {
+    try {
+      await _get(ApiConfig.quickSchedule, request.toParams());
+    } catch (e) {
+      throw ApiException('Failed to execute quick schedule: $e');
     }
   }
 }

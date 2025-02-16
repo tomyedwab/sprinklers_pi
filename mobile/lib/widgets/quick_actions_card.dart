@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'quick_schedule_dialog.dart';
 
 class QuickActionsCard extends ConsumerWidget {
   const QuickActionsCard({super.key});
@@ -28,7 +29,10 @@ class QuickActionsCard extends ConsumerWidget {
                   icon: Icons.play_circle_outline,
                   label: 'Quick Run',
                   onTap: () {
-                    // TODO: Implement quick run dialog
+                    showDialog(
+                      context: context,
+                      builder: (context) => const QuickScheduleDialog(),
+                    );
                   },
                 ),
                 _buildQuickAction(

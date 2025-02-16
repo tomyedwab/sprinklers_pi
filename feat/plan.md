@@ -80,7 +80,7 @@ FLUTTER-303: Schedule Management (Assigned: Maya Patel, Status: Done)
 - Schedule type selection (Day/Interval)
 - Day restriction settings
 
-FLUTTER-304: Quick Schedule Feature (Assigned: David Kim)
+FLUTTER-304: Quick Schedule Feature (Assigned: David Kim, Status: Done)
 - Schedule selection
 - Custom duration inputs
 - Zone selection

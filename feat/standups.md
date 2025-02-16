@@ -297,3 +297,33 @@ None
 - Will implement weather adjustment UI in schedule editor
 - Need to add schedule preview functionality
 - Plan to implement schedule conflict detection
+
+## 2024-03-26 - David Kim
+
+### Yesterday
+Fixed schedule ID handling to properly support new and existing schedules:
+- Changed schedule ID to be nullable in `ScheduleDetail` model
+- Updated `toApiParams` to only include ID when editing existing schedules
+- Fixed schedule edit modal to properly handle nullable IDs
+- Fixed delete action to safely handle nullable IDs
+- Resolved issue where new schedules were overwriting each other with ID 0
+
+### Today
+Improved active zone card countdown functionality:
+- Converted `ActiveZoneCard` to `ConsumerStatefulWidget` for local state management
+- Implemented local countdown timer to update remaining time every second
+- Added proper timer cleanup in widget disposal
+- Updated progress bar to use local countdown time
+- Fixed edge cases:
+  - Manual mode detection (99999 seconds)
+  - Timer cancellation when stopping zones
+  - Proper timer reset when receiving system state updates
+  - Accurate progress calculation using last update time
+
+### Blockers
+None
+
+### Next
+- Will implement zone configuration validation
+- Need to add quick schedule integration
+- Plan to add proper error recovery mechanisms
