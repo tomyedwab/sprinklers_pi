@@ -11,6 +11,7 @@ import '../models/schedule.dart' as app_model;
 import '../models/settings.dart' as app_model;
 import 'models/weather_check.dart';
 import 'models/quick_schedule.dart';
+import '../providers/connection_settings_provider.dart';
 
 part 'api_client.g.dart';
 

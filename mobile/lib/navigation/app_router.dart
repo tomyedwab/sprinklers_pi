@@ -1,115 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'routes.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/zones/zones_screen.dart';
 import '../screens/schedules/schedules_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/diagnostics/diagnostics_screen.dart';
-import '../navigation/navigation_state.dart';
+import '../screens/connection/connection_settings_screen.dart';
 import '../main.dart';
+import '../providers/connection_settings_provider.dart';
 
-class AppRouterDelegate extends RouterDelegate<RouteLocation>
-    with ChangeNotifier, PopNavigatorRouterDelegateMixin<RouteLocation> {
+enum AppRoute {
+  dashboard,
+  zones,
+  schedules,
+  settings,
+  diagnostics,
+  connection,
+}
+
+class AppRouterDelegate extends RouterDelegate<AppRoute>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin<AppRoute> {
   final WidgetRef ref;
-  final GlobalKey<NavigatorState> _navigatorKey;
+  AppRoute _currentRoute;
+  bool _showConnectionSettings = false;
 
-  AppRouterDelegate(this.ref) : _navigatorKey = GlobalKey<NavigatorState>();
-
-  @override
-  GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
-
-  @override
-  RouteLocation? get currentConfiguration {
-    final state = ref.read(navigationProvider);
-    switch (state.currentTab) {
-      case NavigationTab.dashboard:
-        return RouteLocation(AppRoute.dashboard);
-      case NavigationTab.zones:
-        return state.selectedItemId != null
-            ? RouteLocation(AppRoute.zoneDetail, {'id': state.selectedItemId!})
-            : RouteLocation(AppRoute.zones);
-      case NavigationTab.schedules:
-        return state.selectedItemId != null
-            ? RouteLocation(AppRoute.scheduleDetail, {'id': state.selectedItemId!})
-            : RouteLocation(AppRoute.schedules);
-      case NavigationTab.settings:
-        return RouteLocation(AppRoute.settings);
-      case NavigationTab.diagnostics:
-        return RouteLocation(AppRoute.diagnostics);
+  AppRouterDelegate(this.ref) : _currentRoute = AppRoute.dashboard {
+    // Check if we need to show connection settings on startup
+    final settings = ref.read(connectionSettingsProvider);
+    if (settings.baseUrl.isEmpty) {
+      _showConnectionSettings = true;
     }
+  }
+
+  @override
+  final navigatorKey = GlobalKey<NavigatorState>();
+
+  AppRoute get currentRoute => _currentRoute;
+
+  void setCurrentRoute(AppRoute route) {
+    _currentRoute = route;
+    notifyListeners();
   }
 
   @override
   Widget build(BuildContext context) {
     return Navigator(
       key: navigatorKey,
-      pages: _buildPages(),
+      pages: [
+        MaterialPage(
+          key: ValueKey(_currentRoute),
+          child: MainScreen(child: _buildCurrentScreen()),
+        ),
+        if (_showConnectionSettings)
+          MaterialPage(
+            key: const ValueKey('ConnectionSettings'),
+            child: const ConnectionSettingsScreen(isError: true),
+          ),
+      ],
       onPopPage: (route, result) {
         if (!route.didPop(result)) {
           return false;
         }
 
-        ref.read(navigationProvider.notifier).setSelectedItem(null);
+        if (_showConnectionSettings) {
+          // Only allow dismissing the connection settings if we have a valid URL
+          if (ref.read(connectionSettingsProvider).baseUrl.isNotEmpty) {
+            hideConnectionSettings();
+            return true;
+          }
+          return false;
+        }
+
         return true;
       },
     );
   }
 
-  List<Page<dynamic>> _buildPages() {
-    final state = ref.watch(navigationProvider);
-    return [
-      MaterialPage(
-        child: MainScreen(
-          child: _buildScreen(state),
-        ),
-      ),
-    ];
-  }
-
-  Widget _buildScreen(NavigationState state) {
-    switch (state.currentTab) {
-      case NavigationTab.dashboard:
-        return const DashboardScreen();
-      case NavigationTab.zones:
-        return const ZonesScreen();
-      case NavigationTab.schedules:
-        return const SchedulesScreen();
-      case NavigationTab.settings:
-        return const SettingsScreen();
-      case NavigationTab.diagnostics:
-        return const DiagnosticsScreen();
-    }
-  }
-
   @override
-  Future<void> setNewRoutePath(RouteLocation configuration) async {
-    final notifier = ref.read(navigationProvider.notifier);
-    
-    switch (configuration.path) {
+  Future<void> setNewRoutePath(AppRoute configuration) async {
+    setCurrentRoute(configuration);
+  }
+
+  void showConnectionSettings() {
+    _showConnectionSettings = true;
+    notifyListeners();
+  }
+
+  void hideConnectionSettings() {
+    _showConnectionSettings = false;
+    notifyListeners();
+  }
+
+  Widget _buildCurrentScreen() {
+    switch (_currentRoute) {
       case AppRoute.dashboard:
-        notifier.setTab(NavigationTab.dashboard);
-        break;
+        return const DashboardScreen();
       case AppRoute.zones:
-        notifier.setTab(NavigationTab.zones);
-        break;
-      case AppRoute.zoneDetail:
-        notifier.setTab(NavigationTab.zones);
-        notifier.setSelectedItem(configuration.params['id']);
-        break;
+        return const ZonesScreen();
       case AppRoute.schedules:
-        notifier.setTab(NavigationTab.schedules);
-        break;
-      case AppRoute.scheduleDetail:
-        notifier.setTab(NavigationTab.schedules);
-        notifier.setSelectedItem(configuration.params['id']);
-        break;
+        return const SchedulesScreen();
       case AppRoute.settings:
-        notifier.setTab(NavigationTab.settings);
-        break;
+        return const SettingsScreen();
       case AppRoute.diagnostics:
-        notifier.setTab(NavigationTab.diagnostics);
-        break;
+        return const DiagnosticsScreen();
+      case AppRoute.connection:
+        return const ConnectionSettingsScreen();
     }
   }
 } 

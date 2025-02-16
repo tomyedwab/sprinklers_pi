@@ -1,9 +1,36 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/connection_settings_provider.dart';
+
 /// API endpoint configuration
 class ApiConfig {
+  static String? _baseUrl;
+
   /// The base URL for the Sprinklers Pi API
-  /// In development, this points to our proxy server
-  /// In production, this should be set to the full server URL
-  static const String baseUrl = 'http://localhost:8000';
+  /// Throws a StateError if the base URL has not been configured
+  static String get baseUrl {
+    if (_baseUrl?.isEmpty ?? true) {
+      throw StateError('API base URL has not been configured. Please set the connection settings first.');
+    }
+    return _baseUrl!;
+  }
+
+  /// Initialize the base URL from connection settings
+  static void initialize(WidgetRef ref) {
+    final url = ref.read(connectionSettingsProvider).baseUrl;
+    if (url.isEmpty) {
+      throw StateError('Cannot initialize API with an empty base URL');
+    }
+    _baseUrl = url;
+  }
+
+  /// Update the base URL
+  /// Throws an ArgumentError if the URL is empty
+  static void setBaseUrl(String url) {
+    if (url.isEmpty) {
+      throw ArgumentError('Base URL cannot be empty');
+    }
+    _baseUrl = url;
+  }
   
   /// Default timeout duration for API requests
   static const Duration timeout = Duration(seconds: 10);

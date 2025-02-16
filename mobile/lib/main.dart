@@ -3,17 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'navigation/app_router.dart';
 import 'navigation/route_parser.dart';
 import 'widgets/bottom_nav_bar.dart';
+import 'widgets/connection_checker.dart';
+import 'widgets/api_error_boundary.dart';
 
 void main() {
   runApp(
     const ProviderScope(
-      child: MyApp(),
+      child: SprinklersPiApp(),
     ),
   );
 }
 
-class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+class SprinklersPiApp extends ConsumerWidget {
+  const SprinklersPiApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,10 +73,14 @@ class MainScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      body: child,
-      bottomNavigationBar: const AppBottomNavBar(),
+    return ConnectionChecker(
+      child: ApiErrorBoundary(
+        child: Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.background,
+          body: child,
+          bottomNavigationBar: const AppBottomNavBar(),
+        ),
+      ),
     );
   }
 }

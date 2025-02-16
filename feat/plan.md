@@ -132,9 +132,21 @@ FLUTTER-306: Application settings (Assigned: Maya Patel, Status: Done)
 - Time synchronization
 - Output configuration
 
-## FLUTTER-4: Advanced Features Epic
+## FLUTTER-4: Connection & Login
 
-FLUTTER-401: Background Services (Assigned: Luis Rodriguez)
+FLUTTER-401: Connection settings (Assigned: Luis Rodriguez, Status: Done)
+- Local storage of connection settings
+- Connection settings view
+
+FLUTTER-402: Authentication (Assigned: Maya Patel)
+- Detect 302 response codes in API responses
+- Web view for facilitating login
+- Shared cookies between web view and API client
+- Logout button on Settings screen
+
+## FLUTTER-5: Background Services & Offline Support
+
+FLUTTER-501: Background Services (Assigned: Luis Rodriguez)
 - Push notifications using Firebase Cloud Messaging for:
   - Active watering
   - Schedule completion
@@ -142,47 +154,47 @@ FLUTTER-401: Background Services (Assigned: Luis Rodriguez)
   - Weather alerts
 - Background status monitoring using WorkManager
 
-FLUTTER-402: Offline Support (Assigned: David Kim)
+FLUTTER-502: Offline Support (Assigned: David Kim)
 - Local data caching with Hive/SQLite
 - Offline schedule viewing
 - Queue changes for sync
 - Conflict resolution
 
-FLUTTER-403: Security Implementation (Assigned: Luis Rodriguez)
+FLUTTER-503: Security Implementation (Assigned: Luis Rodriguez)
 - Implement authentication
 - Secure API communication
 - Local data encryption
 - Access control
 
-FLUTTER-404: Performance Optimization (Assigned: Maya Patel)
+FLUTTER-504: Performance Optimization (Assigned: Maya Patel)
 - Implement lazy loading with ListView.builder
 - Optimize large lists with Flutter's built-in virtualization
 - Cache management
 - Memory usage optimization using DevTools
 
-## FLUTTER-5: Testing and Deployment Epic
+## FLUTTER-6: Testing and Deployment Epic
 
-FLUTTER-501: Testing Implementation (Assigned: James Wilson)
+FLUTTER-601: Testing Implementation (Assigned: James Wilson)
 - Widget tests
 - Integration tests with Flutter Driver
 - Golden image tests
 - Performance testing with DevTools
 - Platform compatibility testing
 
-FLUTTER-502: Beta Testing Management (Assigned: Sarah Chen)
+FLUTTER-602: Beta Testing Management (Assigned: Sarah Chen)
 - Internal testing phase
 - Firebase App Distribution setup
 - User feedback collection
 - Bug tracking and fixes
 
-FLUTTER-503: Documentation (Assigned: Sarah Chen)
+FLUTTER-603: Documentation (Assigned: Sarah Chen)
 - API integration docs
 - Widget documentation
 - Setup instructions
 - User guide
 - Troubleshooting guide
 
-FLUTTER-504: Release Preparation (Assigned: Luis Rodriguez)
+FLUTTER-604: Release Preparation (Assigned: Luis Rodriguez)
 - Play Store and App Store listings
 - Web deployment setup
 - Marketing materials
