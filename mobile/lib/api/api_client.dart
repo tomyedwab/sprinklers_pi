@@ -5,6 +5,7 @@ import 'api_config.dart';
 import 'models/zone.dart';
 import 'models/system_state.dart';
 import 'models/schedule.dart';
+import 'models/log.dart';
 import '../models/schedule.dart' as app_model;
 import 'models/weather_check.dart';
 import 'models/quick_schedule.dart';
@@ -196,6 +197,55 @@ class ApiClient {
       await _get(ApiConfig.quickSchedule, request.toParams());
     } catch (e) {
       throw ApiException('Failed to execute quick schedule: $e');
+    }
+  }
+
+  /// Get logs with optional grouping and date range
+  Future<ApiLogResponse> getLogs({
+    DateTime? startDate,
+    DateTime? endDate,
+    LogGrouping grouping = LogGrouping.none,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'g': grouping.value,
+      };
+
+      if (startDate != null) {
+        params['sdate'] = (startDate.millisecondsSinceEpoch / 1000).round();
+      }
+      if (endDate != null) {
+        params['edate'] = (endDate.millisecondsSinceEpoch / 1000).round();
+      }
+
+      final response = await _get(ApiConfig.logs, params);
+      return ApiLogResponse.fromJson(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to get logs: ${e.toString()}');
+    }
+  }
+
+  /// Get table logs with date range
+  Future<ApiLogResponse> getTableLogs({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final params = <String, dynamic>{};
+
+      if (startDate != null) {
+        params['sdate'] = (startDate.millisecondsSinceEpoch / 1000).round();
+      }
+      if (endDate != null) {
+        params['edate'] = (endDate.millisecondsSinceEpoch / 1000).round();
+      }
+
+      final response = await _get(ApiConfig.tableLogs, params);
+      return ApiLogResponse.fromJson(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to get table logs: ${e.toString()}');
     }
   }
 }
