@@ -16,11 +16,12 @@ class ApiConfig {
 
   /// Initialize the base URL from connection settings
   static void initialize(WidgetRef ref) {
-    final url = ref.read(connectionSettingsProvider).baseUrl;
-    if (url.isEmpty) {
-      throw StateError('Cannot initialize API with an empty base URL');
-    }
-    _baseUrl = url;
+    ref.read(connectionSettingsProvider).whenData((settings) {
+      if (settings.baseUrl.isEmpty) {
+        throw StateError('Cannot initialize API with an empty base URL');
+      }
+      _baseUrl = settings.baseUrl;
+    });
   }
 
   /// Update the base URL

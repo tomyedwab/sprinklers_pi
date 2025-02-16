@@ -26,10 +26,12 @@ class AppRouterDelegate extends RouterDelegate<AppRoute>
 
   AppRouterDelegate(this.ref) : _currentRoute = AppRoute.dashboard {
     // Check if we need to show connection settings on startup
-    final settings = ref.read(connectionSettingsProvider);
-    if (settings.baseUrl.isEmpty) {
-      _showConnectionSettings = true;
-    }
+    final settingsAsync = ref.read(connectionSettingsProvider);
+    settingsAsync.whenData((settings) {
+      if (settings.baseUrl.isEmpty) {
+        _showConnectionSettings = true;
+      }
+    });
   }
 
   @override
@@ -44,35 +46,42 @@ class AppRouterDelegate extends RouterDelegate<AppRoute>
 
   @override
   Widget build(BuildContext context) {
-    return Navigator(
-      key: navigatorKey,
-      pages: [
-        MaterialPage(
-          key: ValueKey(_currentRoute),
-          child: MainScreen(child: _buildCurrentScreen()),
-        ),
-        if (_showConnectionSettings)
+    // Watch for connection settings changes
+    final settingsAsync = ref.watch(connectionSettingsProvider);
+
+    return settingsAsync.when(
+      data: (settings) => Navigator(
+        key: navigatorKey,
+        pages: [
           MaterialPage(
-            key: const ValueKey('ConnectionSettings'),
-            child: const ConnectionSettingsScreen(isError: true),
+            key: ValueKey(_currentRoute),
+            child: MainScreen(child: _buildCurrentScreen()),
           ),
-      ],
-      onPopPage: (route, result) {
-        if (!route.didPop(result)) {
-          return false;
-        }
-
-        if (_showConnectionSettings) {
-          // Only allow dismissing the connection settings if we have a valid URL
-          if (ref.read(connectionSettingsProvider).baseUrl.isNotEmpty) {
-            hideConnectionSettings();
-            return true;
+          if (_showConnectionSettings || settings.baseUrl.isEmpty)
+            MaterialPage(
+              key: const ValueKey('ConnectionSettings'),
+              child: const ConnectionSettingsScreen(isError: true),
+            ),
+        ],
+        onPopPage: (route, result) {
+          if (!route.didPop(result)) {
+            return false;
           }
-          return false;
-        }
 
-        return true;
-      },
+          if (_showConnectionSettings) {
+            // Only allow dismissing the connection settings if we have a valid URL
+            if (settings.baseUrl.isNotEmpty) {
+              hideConnectionSettings();
+              return true;
+            }
+            return false;
+          }
+
+          return true;
+        },
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => const Center(child: Text('Error loading settings')),
     );
   }
 

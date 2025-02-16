@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/settings.dart';
+import '../../models/connection_settings.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/connection_settings_provider.dart';
+import '../../navigation/app_router.dart';
 import '../../widgets/loading_states.dart';
 import '../../widgets/standard_error_widget.dart';
 import '../../widgets/confirmation_dialogs.dart';
@@ -396,6 +399,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 32),
+              // Logout Button
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Connection',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () async {
+                          final shouldLogout = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => const ConfirmActionDialog(
+                              title: 'Logout',
+                              message: 'Are you sure you want to disconnect from the server?',
+                              confirmText: 'Logout',
+                              icon: Icons.logout,
+                              isDestructive: true,
+                            ),
+                          );
+
+                          if (shouldLogout == true && mounted) {
+                            // Clear the connection settings
+                            await ref.read(connectionSettingsProvider.notifier).updateSettings(
+                              ConnectionSettings.defaultSettings,
+                            );
+
+                            if (!mounted) return;
+
+                            // Show the connection settings screen
+                            final router = Router.of(context).routerDelegate as AppRouterDelegate;
+                            router.showConnectionSettings();
+                          }
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.error,
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        label: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
             ],
           ),
         ),

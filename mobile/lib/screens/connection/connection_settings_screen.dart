@@ -28,7 +28,9 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
   void initState() {
     super.initState();
     // Pre-fill with current URL if it exists
-    _urlController.text = ref.read(connectionSettingsProvider).baseUrl;
+    ref.read(connectionSettingsProvider).whenData((settings) {
+      _urlController.text = settings.baseUrl;
+    });
   }
 
   @override
@@ -57,7 +59,12 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
 
   Future<bool> _testConnection(String url) async {
     setState(() => _isValidating = true);
-    final originalUrl = ref.read(connectionSettingsProvider).baseUrl;
+    String? originalUrl;
+    
+    // Get the current settings if they exist
+    ref.read(connectionSettingsProvider).whenData((settings) {
+      originalUrl = settings.baseUrl;
+    });
     
     try {
       // Temporarily set the API URL for testing
@@ -71,8 +78,8 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
       return true;
     } catch (e) {
       // Only restore the original URL if the test failed and we had a previous URL
-      if (originalUrl.isNotEmpty) {
-        ApiConfig.setBaseUrl(originalUrl);
+      if (originalUrl?.isNotEmpty ?? false) {
+        ApiConfig.setBaseUrl(originalUrl!);
       }
       return false;
     } finally {
@@ -117,74 +124,199 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
 
   @override
   Widget build(BuildContext context) {
+    final settingsAsync = ref.watch(connectionSettingsProvider);
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: const Text('Connection Settings'),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Connection Settings',
+          style: theme.textTheme.titleLarge,
+        ),
+        elevation: 2,
         // Only show back button if this wasn't opened due to an error
         automaticallyImplyLeading: !widget.isError,
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (widget.isError) ...[
-              const Card(
-                color: Colors.red,
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Icon(Icons.error_outline, color: Colors.white, size: 48),
-                      SizedBox(height: 16),
-                      Text(
-                        'Connection Error',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+      body: settingsAsync.when(
+        data: (settings) => Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (widget.isError && settings.baseUrl.isNotEmpty) ...[
+                Card(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.error,
+                          theme.colorScheme.error.withOpacity(0.8),
+                        ],
                       ),
-                      SizedBox(height: 8),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.white, size: 48),
+                          SizedBox(height: 16),
+                          Text(
+                            'Connection Error',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Please check your connection settings and ensure the Sprinklers Pi server is running.',
+                            style: TextStyle(color: Colors.white),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else if (settings.baseUrl.isEmpty) ...[
+                Card(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.primary.withOpacity(0.8),
+                        ],
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.wifi_find,
+                            color: theme.colorScheme.surface,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Welcome to Sprinklers Pi',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: theme.colorScheme.surface,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Please enter the URL of your Sprinklers Pi server to get started.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.surface,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'Please check your connection settings and ensure the Sprinklers Pi server is running.',
-                        style: TextStyle(color: Colors.white),
-                        textAlign: TextAlign.center,
+                        'Server Connection',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _urlController,
+                        decoration: InputDecoration(
+                          labelText: 'Server URL',
+                          hintText: 'http://192.168.1.100:8080',
+                          helperText: 'Enter the full URL of your Sprinklers Pi server',
+                          border: const OutlineInputBorder(),
+                          labelStyle: TextStyle(color: theme.colorScheme.secondary),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.primary),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5)),
+                          ),
+                        ),
+                        validator: _validateUrl,
+                        enabled: !_isValidating,
+                        autocorrect: false,
+                        keyboardType: TextInputType.url,
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: _isValidating ? null : _saveSettings,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        child: _isValidating
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Save and Test Connection'),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
             ],
-            TextFormField(
-              controller: _urlController,
-              decoration: const InputDecoration(
-                labelText: 'Server URL',
-                hintText: 'http://192.168.1.100:8080',
-                helperText: 'Enter the full URL of your Sprinklers Pi server',
-                border: OutlineInputBorder(),
-              ),
-              validator: _validateUrl,
-              enabled: !_isValidating,
-              autocorrect: false,
-              keyboardType: TextInputType.url,
+          ),
+        ),
+        loading: () => Center(
+          child: CircularProgressIndicator(
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: theme.colorScheme.error,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error Loading Settings',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _isValidating ? null : _saveSettings,
-              child: _isValidating
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Save and Test Connection'),
-            ),
-          ],
+          ),
         ),
       ),
     );

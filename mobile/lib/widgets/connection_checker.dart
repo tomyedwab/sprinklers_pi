@@ -24,10 +24,11 @@ class _ConnectionCheckerState extends ConsumerState<ConnectionChecker> {
     // Schedule the check for after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Only check connection if we have a base URL configured
-      final settings = ref.read(connectionSettingsProvider);
-      if (settings.baseUrl.isNotEmpty) {
-        ref.read(connectionErrorProvider.notifier).checkInitialConnection(context);
-      }
+      ref.read(connectionSettingsProvider).whenData((settings) {
+        if (settings.baseUrl.isNotEmpty) {
+          ref.read(connectionErrorProvider.notifier).checkInitialConnection(context);
+        }
+      });
     });
   }
 
