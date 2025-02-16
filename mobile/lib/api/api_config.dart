@@ -3,7 +3,7 @@ class ApiConfig {
   /// The base URL for the Sprinklers Pi API
   /// In development, this points to our proxy server
   /// In production, this should be set to the full server URL
-  static String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'http://localhost:8000';
   
   /// Default timeout duration for API requests
   static const Duration timeout = Duration(seconds: 10);

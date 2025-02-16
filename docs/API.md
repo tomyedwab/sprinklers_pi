@@ -145,23 +145,25 @@ Where {b-z} represents the zone ID (b=1, c=2, etc.)
 ### Get Settings
 **Endpoint**: `/json/settings`  
 **Method**: GET  
+**Description**: Retrieves the current system settings  
 **Response Structure**:
 ```json
 {
-  "ip": "string",          // System IP address
-  "netmask": "string",     // Network mask
-  "gateway": "string",     // Network gateway
-  "webport": "number",     // Web interface port
-  "apikey": "string",      // Weather API key
-  "wutype": "zip|pws",    // Weather location type
-  "zip": "string",        // ZIP code (if wutype=zip)
-  "pws": "string",        // PWS ID (if wutype=pws)
-  "NTPip": "string",      // NTP server IP
-  "NTPoffset": "number",  // Timezone offset
-  "sadj": "number",       // Seasonal adjustment (0-200)
-  "ot": "0|1|2|3"        // Output type
+  "webport": "string",     // Web interface port as string
+  "ot": "string",         // Output type ("0"=None, "1"=Direct+, "2"=Direct-, "3"=OpenSprinkler)
+  "wuip": "string",       // Weather service IP
+  "apisecret": "string?", // Optional API secret
+  "loc": "string?",       // Optional location coordinates (latitude,longitude)
+  "sadj": "string"        // Seasonal adjustment percentage (0-200) as string
 }
 ```
+
+**Notes**:
+- All numeric values are returned as strings and must be parsed
+- The `apisecret` and `loc` fields may be omitted or null
+- The `webport` value should be between 0 and 32767
+- The `sadj` (seasonal adjustment) value should be between 0 and 200
+- Some fields documented in older versions (ip, netmask, gateway, apikey, wutype, zip, pws, NTPip, NTPoffset) may no longer be in use
 
 ### Save Settings
 **Endpoint**: `/bin/settings`  

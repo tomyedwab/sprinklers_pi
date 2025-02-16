@@ -93,7 +93,7 @@ FLUTTER-305: Logging and Diagnostics (Assigned: David Kim, Status: Done)
 - Chatter box functionality
 - System maintenance options
 
-FLUTTER-306: Application settings (Assigned: Maya Patel)
+FLUTTER-306: Application settings (Assigned: Maya Patel, Status: Done)
 - Network settings
 - Weather provider setup
 - System adjustments

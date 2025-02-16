@@ -6,7 +6,9 @@ import 'models/zone.dart';
 import 'models/system_state.dart';
 import 'models/schedule.dart';
 import 'models/log.dart';
+import 'models/settings.dart';
 import '../models/schedule.dart' as app_model;
+import '../models/settings.dart' as app_model;
 import 'models/weather_check.dart';
 import 'models/quick_schedule.dart';
 
@@ -285,6 +287,28 @@ class ApiClient {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to send chatter message: ${e.toString()}');
+    }
+  }
+
+  /// Get system settings
+  Future<ApiSettings> getSettings() async {
+    try {
+      final response = await _get(ApiConfig.settings);
+      return ApiSettings.fromJson(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to get settings: ${e.toString()}');
+    }
+  }
+
+  /// Save system settings
+  Future<void> saveSettings(app_model.Settings settings) async {
+    try {
+      final params = settings.toApiParams();
+      await _get(ApiConfig.saveSettings, params);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to save settings: ${e.toString()}');
     }
   }
 }
