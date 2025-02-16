@@ -225,8 +225,15 @@ Where {b-z} represents the zone ID (b=1, c=2, etc.)
 **Endpoint**: `/bin/chatter`  
 **Method**: GET  
 **Parameters**:
-- `zone`: Zone ID to test
-- `state`: Test state
+- `zone`: Zone ID (zb-zz)
+- `state`: Test state ("on"/"off") - Note: This parameter is required but does not affect functionality
+
+**Description**: Test system communication for a specific zone. Used for debugging communication issues and monitoring system responses.
+
+**Notes**:
+- Zone IDs follow the same mapping as manual control (zb=Zone 1, zc=Zone 2, etc.)
+- The state parameter is required by the API but does not affect the test functionality
+- Check system logs to monitor the response
 
 ## Logging
 
@@ -234,36 +241,71 @@ Where {b-z} represents the zone ID (b=1, c=2, etc.)
 **Endpoint**: `/json/logs`  
 **Method**: GET  
 **Parameters**:
-- `sdate`: Start timestamp
-- `edate`: End timestamp
+- `sdate`: Start timestamp (Unix timestamp in seconds)
+- `edate`: End timestamp (Unix timestamp in seconds)
 - `g`: Grouping (h=Hour, d=DOW, m=Month, n=None)
+
+**Response Structure**:
+```json
+{
+  "1": [                   // Zone ID as key (1-based)
+    [
+      1234567890000,      // Timestamp in milliseconds
+      300                 // Duration in seconds
+    ],
+    // ... more data points
+  ],
+  "2": [
+    // ... data points for zone 2
+  ]
+  // ... more zones
+}
+```
+
+**Notes**:
+- Response format varies based on grouping parameter
+- Timestamps are in milliseconds for graph data
+- Data is organized by zone ID (1-based)
+- Each data point is an array of [timestamp, duration]
+- Empty zones are omitted from response
 
 ### Table Data
 **Endpoint**: `/json/tlogs`  
 **Method**: GET  
 **Parameters**:
-- `sdate`: Start timestamp
-- `edate`: End timestamp
+- `sdate`: Start timestamp (Unix timestamp in seconds)
+- `edate`: End timestamp (Unix timestamp in seconds)
 
 **Response Structure**:
 ```json
 {
   "logs": [
     {
-      "zone": "number",          // Zone number
+      "zone": "number",          // Zone number (1-based)
       "entries": [
         {
-          "date": "number",      // Unix timestamp
-          "duration": "number",   // Run duration (seconds)
+          "date": "number",      // Unix timestamp in seconds
+          "duration": "number",   // Run duration in seconds
           "schedule": "number",   // Schedule ID (-1=Manual, 100=Quick)
-          "seasonal": "number",   // Seasonal adjustment %
-          "wunderground": "number" // Weather adjustment %
+          "seasonal": "number",   // Seasonal adjustment percentage
+          "wunderground": "number" // Weather adjustment percentage
         }
       ]
     }
   ]
 }
 ```
+
+**Notes**:
+- Table data includes additional context for each run
+- Timestamps are in seconds for table data
+- Schedule ID special values:
+  - -1: Manual run
+  - 100: Quick schedule
+  - Other: Regular schedule ID
+- Adjustment percentages are relative to 100 (e.g., 80 = 80% reduction)
+- Zones with no entries in the time range are omitted
+- Entries are sorted by date in descending order
 
 ## Error Handling
 All endpoints may return HTTP error codes:

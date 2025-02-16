@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/log_viewer.dart';
 import 'widgets/weather_diagnostics.dart';
 import 'widgets/system_maintenance.dart';
+import 'widgets/chatter_box.dart';
 
 class DiagnosticsScreen extends ConsumerStatefulWidget {
   const DiagnosticsScreen({super.key});
@@ -17,7 +18,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> with Sing
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -46,15 +47,20 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> with Sing
               icon: Icon(Icons.build),
               text: 'System',
             ),
+            Tab(
+              icon: Icon(Icons.message),
+              text: 'Chatter',
+            ),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          const LogViewer(),
-          const WeatherDiagnostics(),
-          const SystemMaintenance(),
+        children: const [
+          LogViewer(),
+          WeatherDiagnostics(),
+          SystemMaintenance(),
+          ChatterBox(),
         ],
       ),
     );

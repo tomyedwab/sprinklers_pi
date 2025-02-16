@@ -25,4 +25,5 @@ class ApiConfig {
   static const String factoryReset = '/bin/factory';
   static const String logs = '/json/logs';
   static const String tableLogs = '/json/tlogs';
+  static const String chatterBox = '/bin/chatter';
 } 

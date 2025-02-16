@@ -248,6 +248,45 @@ class ApiClient {
       throw ApiException('Failed to get table logs: ${e.toString()}');
     }
   }
+
+  /// Reset the system (restart all services while maintaining settings)
+  Future<void> resetSystem() async {
+    try {
+      await _get(ApiConfig.systemReset);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to reset system: ${e.toString()}');
+    }
+  }
+
+  /// Reset all settings to factory defaults
+  Future<void> factoryReset() async {
+    try {
+      await _get(ApiConfig.factoryReset);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to factory reset: ${e.toString()}');
+    }
+  }
+
+  /// Send a chatter box message to test system communication
+  Future<void> sendChatterMessage({
+    required int zoneId,
+    required bool state,
+  }) async {
+    try {
+      await _get(
+        ApiConfig.chatterBox,
+        {
+          'zone': 'z${_zoneIdToName(zoneId)}',  // Convert 0 to 'zb', 1 to 'zc', etc.
+          'state': state ? 'on' : 'off',
+        },
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to send chatter message: ${e.toString()}');
+    }
+  }
 }
 
 @riverpod

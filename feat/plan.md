@@ -86,7 +86,7 @@ FLUTTER-304: Quick Schedule Feature (Assigned: David Kim, Status: Done)
 - Zone selection
 - Immediate execution
 
-FLUTTER-305: Logging and Diagnostics (Assigned: David Kim)
+FLUTTER-305: Logging and Diagnostics (Assigned: David Kim, Status: Done)
 - Log viewer with filtering
 - Graph visualization
 - Weather diagnostics
