@@ -5,6 +5,7 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/zones/zones_screen.dart';
 import '../screens/schedules/schedules_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/diagnostics/diagnostics_screen.dart';
 import '../navigation/navigation_state.dart';
 import '../main.dart';
 
@@ -34,6 +35,8 @@ class AppRouterDelegate extends RouterDelegate<RouteLocation>
             : RouteLocation(AppRoute.schedules);
       case NavigationTab.settings:
         return RouteLocation(AppRoute.settings);
+      case NavigationTab.diagnostics:
+        return RouteLocation(AppRoute.diagnostics);
     }
   }
 
@@ -55,31 +58,28 @@ class AppRouterDelegate extends RouterDelegate<RouteLocation>
 
   List<Page<dynamic>> _buildPages() {
     final state = ref.watch(navigationProvider);
-    Widget screen;
-
-    // Determine the current screen based on navigation state
-    switch (state.currentTab) {
-      case NavigationTab.dashboard:
-        screen = const DashboardScreen();
-        break;
-      case NavigationTab.zones:
-        screen = const ZonesScreen();
-        break;
-      case NavigationTab.schedules:
-        screen = const SchedulesScreen();
-        break;
-      case NavigationTab.settings:
-        screen = const SettingsScreen();
-        break;
-    }
-
-    // Wrap the screen in our MainScreen shell
     return [
       MaterialPage(
-        key: ValueKey(state.currentTab),
-        child: MainScreen(child: screen),
+        child: MainScreen(
+          child: _buildScreen(state),
+        ),
       ),
     ];
+  }
+
+  Widget _buildScreen(NavigationState state) {
+    switch (state.currentTab) {
+      case NavigationTab.dashboard:
+        return const DashboardScreen();
+      case NavigationTab.zones:
+        return const ZonesScreen();
+      case NavigationTab.schedules:
+        return const SchedulesScreen();
+      case NavigationTab.settings:
+        return const SettingsScreen();
+      case NavigationTab.diagnostics:
+        return const DiagnosticsScreen();
+    }
   }
 
   @override
@@ -106,6 +106,9 @@ class AppRouterDelegate extends RouterDelegate<RouteLocation>
         break;
       case AppRoute.settings:
         notifier.setTab(NavigationTab.settings);
+        break;
+      case AppRoute.diagnostics:
+        notifier.setTab(NavigationTab.diagnostics);
         break;
     }
   }

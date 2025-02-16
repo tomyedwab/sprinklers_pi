@@ -5,6 +5,7 @@ enum NavigationTab {
   zones,
   schedules,
   settings,
+  diagnostics,
 }
 
 class NavigationState {

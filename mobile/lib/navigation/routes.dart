@@ -5,6 +5,7 @@ class AppRoute {
   static const String schedules = '/schedules';
   static const String scheduleDetail = '/schedules/:id';
   static const String settings = '/settings';
+  static const String diagnostics = '/diagnostics';
 
   static String zoneDetailPath(String id) => '/zones/$id';
   static String scheduleDetailPath(String id) => '/schedules/$id';
@@ -40,6 +41,8 @@ class RouteLocation {
         return RouteLocation(AppRoute.schedules);
       case 'settings':
         return RouteLocation(AppRoute.settings);
+      case 'diagnostics':
+        return RouteLocation(AppRoute.diagnostics);
       default:
         return RouteLocation(AppRoute.dashboard);
     }

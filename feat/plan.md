@@ -86,19 +86,19 @@ FLUTTER-304: Quick Schedule Feature (Assigned: David Kim, Status: Done)
 - Zone selection
 - Immediate execution
 
-FLUTTER-305: Settings and Configuration (Assigned: Maya Patel)
-- Network settings
-- Weather provider setup
-- System adjustments
-- Time synchronization
-- Output configuration
-
-FLUTTER-306: Logging and Diagnostics (Assigned: David Kim)
+FLUTTER-305: Logging and Diagnostics (Assigned: David Kim)
 - Log viewer with filtering
 - Graph visualization
 - Weather diagnostics
 - Chatter box functionality
 - System maintenance options
+
+FLUTTER-306: Application settings (Assigned: Maya Patel)
+- Network settings
+- Weather provider setup
+- System adjustments
+- Time synchronization
+- Output configuration
 
 ## FLUTTER-4: Advanced Features Epic
 

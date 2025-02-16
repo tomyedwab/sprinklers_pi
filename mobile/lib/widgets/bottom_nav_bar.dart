@@ -29,6 +29,10 @@ class AppBottomNavBar extends ConsumerWidget {
           icon: Icon(Icons.settings),
           label: 'Settings',
         ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.bug_report),
+          label: 'Diagnostics',
+        ),
       ],
       onTap: (index) {
         ref.read(navigationProvider.notifier).setTab(NavigationTab.values[index]);
