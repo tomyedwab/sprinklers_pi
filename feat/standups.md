@@ -546,3 +546,63 @@ None
 - Will implement proper validation for zone durations
 - Need to add loading indicators during quick schedule execution
 - Plan to improve error handling for quick schedule failures
+
+## 2024-04-04 - David Kim
+
+### Yesterday
+Fixed quick schedule implementation and improved documentation for zone durations.
+
+### Today
+Improved schedule list UI (FLUTTER-309):
+- Added comprehensive schedule information to each card:
+  - Schedule type (day-based/interval) with appropriate icons
+  - Smart formatting of selected days ("Every day", "Except Wed, Fri", etc.)
+  - Start times in 12-hour format
+  - Next run time with icon
+  - Weather adjustment indicator
+- Improved visual hierarchy with consistent styling
+- Added blue clock icon for visual flair
+- Fixed toggle button styling for consistency
+- Maintained clean layout with proper spacing and alignment
+
+### Blockers
+None
+
+### Next
+- Will continue with remaining FLUTTER-309 tasks:
+  - Editor Save button grayed out when no changes
+  - Dismissing editor warns about unsaved changes
+  - Editor times in 12-hour format
+  - Weather adjust toggle in editor
+
+## 2024-04-05 - Maya Patel
+
+### Yesterday
+Improved schedule list UI with comprehensive information display and consistent styling.
+
+### Today
+Completed remaining FLUTTER-309 tasks:
+- Implemented unsaved changes handling in schedule editor:
+  - Added state tracking for all schedule properties
+  - Grayed out save button when no changes detected
+  - Added confirmation dialog when dismissing with unsaved changes
+- Enhanced time display throughout the app:
+  - Updated editor to show times in 12-hour format with AM/PM
+  - Ensured consistent time format in schedule list and editor
+  - Maintained 24-hour format for API communication
+- Added weather adjust toggle to schedule editor:
+  - Implemented toggle with explanatory subtitle
+  - Set default to enabled for new schedules
+  - Added weather adjustment indicator in schedule list
+- Fixed days-of-week selector styling:
+  - Updated chip colors for better contrast
+  - Made selection state more visible
+  - Maintained consistent styling with other UI elements
+
+### Blockers
+None
+
+### Next
+- Will begin work on FLUTTER-310 diagnostics issues
+- Need to improve log viewer form styling
+- Plan to enhance graph visualization

@@ -6,6 +6,7 @@ import '../../models/schedule.dart';
 import '../../widgets/loading_states.dart';
 import '../../widgets/confirmation_dialogs.dart';
 import '../../widgets/standard_error_widget.dart';
+import '../../widgets/zone_toggle_widget.dart';
 import 'widgets/schedule_edit_modal.dart';
 
 class SchedulesScreen extends ConsumerWidget {
@@ -141,36 +142,198 @@ class _ScheduleListCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
-      child: ListTile(
-        title: Text(schedule.name, style: theme.textTheme.titleMedium),
-        subtitle: schedule.formattedNextRun != null
-            ? Text(
-                'Next run: ${schedule.formattedNextRun}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
-                ),
-              )
-            : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Switch(
-              value: schedule.isEnabled,
-              onChanged: onToggle,
-              activeColor: theme.colorScheme.primary,
-            ),
-            IconButton(
-              icon: Icon(Icons.edit, color: theme.colorScheme.secondary),
-              onPressed: onEdit,
-            ),
-            IconButton(
-              icon: Icon(Icons.delete, color: theme.colorScheme.error),
-              onPressed: onDelete,
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.schedule,
+                            size: 20,
+                            color: Colors.blue,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              schedule.name,
+                              style: theme.textTheme.titleMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final detailsAsync = ref.watch(
+                            scheduleDetailsProvider(schedule.id)
+                          );
+                          
+                          return detailsAsync.when(
+                            data: (details) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Schedule type and days/interval
+                                Row(
+                                  children: [
+                                    Icon(
+                                      details.type == ScheduleType.dayBased 
+                                        ? Icons.calendar_today 
+                                        : Icons.repeat,
+                                      size: 16,
+                                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        details.type == ScheduleType.dayBased
+                                          ? _formatDays(details.days)
+                                          : 'Every ${details.interval} day${details.interval > 1 ? 's' : ''}',
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                // Start times
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.schedule,
+                                      size: 16,
+                                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _formatTimes(context, details.times),
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (schedule.formattedNextRun != null) ...[
+                                  const SizedBox(height: 4),
+                                  // Next run time
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.update,
+                                        size: 16,
+                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Next run: ${schedule.formattedNextRun}',
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                                if (details.isWeatherAdjusted) ...[
+                                  const SizedBox(height: 4),
+                                  // Weather adjust indicator
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.water_drop,
+                                        size: 16,
+                                        color: theme.colorScheme.primary.withOpacity(0.7),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Weather adjusted',
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: theme.colorScheme.primary.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                            loading: () => const SizedBox(
+                              height: 24,
+                              child: Center(
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                            error: (_, __) => Text(
+                              'Error loading schedule details',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Switch(
+                      value: schedule.isEnabled,
+                      onChanged: onToggle,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: theme.colorScheme.secondary),
+                      onPressed: onEdit,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: theme.colorScheme.error),
+                      onPressed: onDelete,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDays(List<bool> days) {
+    final dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    final enabledDays = <String>[];
+    
+    for (var i = 0; i < days.length; i++) {
+      if (days[i]) enabledDays.add(dayNames[i]);
+    }
+    
+    if (enabledDays.isEmpty) return 'No days selected';
+    if (enabledDays.length == 7) return 'Every day';
+    if (enabledDays.length >= 4) {
+      final disabledDays = dayNames.where((day) => !enabledDays.contains(day));
+      return 'Except ${disabledDays.join(', ')}';
+    }
+    return enabledDays.join(', ');
+  }
+
+  String _formatTimes(BuildContext context, List<ScheduleTime> times) {
+    final enabledTimes = times.where((t) => t.isEnabled).map((t) {
+      final hour = int.parse(t.time.split(':')[0]);
+      final minute = int.parse(t.time.split(':')[1]);
+      return TimeOfDay(hour: hour, minute: minute).format(context);
+    }).toList();
+    
+    if (enabledTimes.isEmpty) return 'No times set';
+    return enabledTimes.join(', ');
   }
 }
 

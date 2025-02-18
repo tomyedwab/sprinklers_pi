@@ -109,59 +109,79 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mediaQuery = MediaQuery.of(context);
 
     return Dialog(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Edit Zone ${widget.zone.id}',
-                  style: theme.textTheme.titleLarge,
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _confirmClose,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Zone Name',
-                helperText: 'Maximum 19 characters',
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: mediaQuery.size.width > 600 ? 600 : mediaQuery.size.width * 0.9,
+          maxHeight: mediaQuery.size.height * 0.9,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Edit Zone ${widget.zone.id}',
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _confirmClose,
+                  ),
+                ],
               ),
-              maxLength: 19,
-            ),
-            const SizedBox(height: 16),
-            SwitchListTile(
-              title: const Text('Enabled'),
-              value: _isEnabled,
-              onChanged: (value) {
-                setState(() => _isEnabled = value);
-                _checkForChanges();
-              },
-            ),
-            SwitchListTile(
-              title: const Text('Pump Associated'),
-              value: _isPumpAssociated,
-              onChanged: (value) {
-                setState(() => _isPumpAssociated = value);
-                _checkForChanges();
-              },
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _hasChanges ? _saveChanges : null,
-              child: const Text('Save Changes'),
-            ),
-          ],
+              const SizedBox(height: 24),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Zone Name',
+                  helperText: 'Maximum 19 characters',
+                ),
+                maxLength: 19,
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: const Text('Enabled'),
+                value: _isEnabled,
+                onChanged: (value) {
+                  setState(() => _isEnabled = value);
+                  _checkForChanges();
+                },
+              ),
+              SwitchListTile(
+                title: const Text('Pump Associated'),
+                subtitle: const Text(
+                  'When enabled, the pump will automatically turn on when this zone is active. Use this for zones that require additional water pressure.',
+                ),
+                value: _isPumpAssociated,
+                onChanged: (value) {
+                  setState(() => _isPumpAssociated = value);
+                  _checkForChanges();
+                },
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _confirmClose,
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _hasChanges ? _saveChanges : null,
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

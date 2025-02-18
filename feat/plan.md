@@ -143,18 +143,23 @@ FLUTTER-307: Dashboard bugs & issues (Assigned: Maya Patel, Status: Done)
 - Weather card should include some explanation of what "N% Adjustment" means
 - Weather card should have a graphic icon showing day/night and whether it is raining
 
-FLUTTER-308: Zone and schedule management bugs & issues (Assigned: David Kim)
+FLUTTER-308: Zone management bugs & issues (Assigned: David Kim, Status: Done)
 - The icon next to the zone name doesn't look anything like a pump
 - The zone editor needs some explanation of what "Pump Associated" means
-- Schedule list is lacking information about the actual schedule, only showing the next run
 - Enable/disable widget is visually inconsistent between Dashboard, Zones and Schedules screens
 - Zone editor is narrower than the schedule editor for no reason
 - Zone editor should have cancel/save buttons like the schedule editor
-- Zone editor is missing a "weather adjust" toggle
-- Days-of-week selector has black text on a dark navy background, should be consistent with the other widgets
-- Schedule editor should show times in 12-hour format with AM/PM
 
-FLUTTER-309: Diagnostics bugs & issues (Assigned: David Kim)
+FLUTTER-309: Schedule management bugs & issues (Assigned: David Kim, Status: Done)
+- Schedule list is lacking information about the actual schedule, only showing the next run
+- Enable/disable widget is visually inconsistent between Dashboard, Zones and Schedules screens
+- Days-of-week selector has black text on a dark navy background, should be consistent with the other widgets
+- Editor should show times in 12-hour format with AM/PM
+- Editor is missing a "weather adjust" toggle
+- Editor Save button should be grayed out when there are no changes
+- Dismissing the editor should warn when there are unsaved changes
+
+FLUTTER-310: Diagnostics bugs & issues (Assigned: David Kim)
 - Logs form widgets are not wrapped in a card
 - Zone filter should be a multi-select dropdown
 - Grouping by "None" is not self-evident; should be "No Grouping"

@@ -55,18 +55,7 @@ class _ZoneToggleWidgetState extends ConsumerState<ZoneToggleWidget> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Zone status indicator
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: stateColor,
-            ),
-          ),
-          const SizedBox(width: 12),
-          
-          // Zone title and pump indicator
+          // Zone title
           Expanded(
             child: Row(
               children: [
@@ -77,14 +66,6 @@ class _ZoneToggleWidgetState extends ConsumerState<ZoneToggleWidget> {
                     fontStyle: widget.isEnabled ? null : FontStyle.italic,
                   ),
                 ),
-                if (widget.hasPumpAssociation) ...[
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.waves,
-                    size: 16,
-                    color: stateColor,
-                  ),
-                ],
               ],
             ),
           ),
