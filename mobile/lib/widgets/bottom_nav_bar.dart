@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../navigation/app_router.dart';
+import '../navigation/routes.dart';
 
 class AppBottomNavBar extends ConsumerWidget {
   const AppBottomNavBar({super.key});
@@ -9,12 +10,31 @@ class AppBottomNavBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = Router.of(context).routerDelegate as AppRouterDelegate;
     final currentRoute = router.currentRoute;
-    final theme = Theme.of(context);
+
+    // Map of route paths to their indices
+    final routeIndices = {
+      AppRoute.dashboard: 0,
+      AppRoute.zones: 1,
+      AppRoute.schedules: 2,
+      AppRoute.settings: 3,
+      AppRoute.diagnostics: 4,
+    };
+
+    // Get the current index based on the route path
+    final selectedIndex = routeIndices[currentRoute.path] ?? 0;
 
     return NavigationBar(
-      selectedIndex: currentRoute.index,
+      selectedIndex: selectedIndex,
       onDestinationSelected: (index) {
-        router.setCurrentRoute(AppRoute.values[index]);
+        // Map of indices to route paths
+        final routes = [
+          AppRoute.dashboard,
+          AppRoute.zones,
+          AppRoute.schedules,
+          AppRoute.settings,
+          AppRoute.diagnostics,
+        ];
+        router.setCurrentRoute(RouteLocation(routes[index]));
       },
       backgroundColor: const Color(0xFFf9fbfa), // Card Background from design spec
       elevation: 6,

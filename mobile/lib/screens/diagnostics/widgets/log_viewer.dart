@@ -32,7 +32,10 @@ class _LogViewerState extends ConsumerState<LogViewer> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Schedule the initial load after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   @override
@@ -40,27 +43,15 @@ class _LogViewerState extends ConsumerState<LogViewer> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    if (_viewType == ViewType.graph) {
-      await ref.read(logNotifierProvider.notifier).fetchDateRange(
-        startDate: _startDate,
-        endDate: _endDate,
-        grouping: _grouping,
-      );
-    } else {
-      await ref.read(tableLogNotifierProvider.notifier).fetchDateRange(
-        startDate: _startDate,
-        endDate: _endDate,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final zones = ref.watch(zonesNotifierProvider);
+    
+    // Watch the providers without triggering fetches in the select
     final logs = _viewType == ViewType.graph
         ? ref.watch(logNotifierProvider)
         : ref.watch(tableLogNotifierProvider);
+
     final dateFormat = DateFormat('MMM d, y');
 
     return Column(
@@ -90,8 +81,8 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                   onSelectionChanged: (selected) {
                     setState(() {
                       _viewType = selected.first;
-                      _loadData();
                     });
+                    _loadData();
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.resolveWith<Color?>(
@@ -140,8 +131,8 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                           if (date != null) {
                             setState(() {
                               _startDate = date;
-                              _loadData();
                             });
+                            _loadData();
                           }
                         },
                       ),
@@ -162,8 +153,8 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                           if (date != null) {
                             setState(() {
                               _endDate = date;
-                              _loadData();
                             });
+                            _loadData();
                           }
                         },
                       ),
@@ -192,8 +183,8 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                     onSelectionChanged: (selected) {
                       setState(() {
                         _grouping = selected.first;
-                        _loadData();
                       });
+                      _loadData();
                     },
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.resolveWith<Color?>(
@@ -241,7 +232,9 @@ class _LogViewerState extends ConsumerState<LogViewer> {
         ),
         Expanded(
           child: RefreshIndicator(
-            onRefresh: _loadData,
+            onRefresh: () async {
+              await _loadData();
+            },
             child: logs.when(
               data: (data) {
                 if (_viewType == ViewType.table) {
@@ -267,7 +260,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                   message: 'Failed to load logs: $error',
                   type: ErrorType.network,
                   showRetry: true,
-                  onPrimaryAction: _loadData,
+                  onPrimaryAction: () => _loadData(),
                 ),
               ),
             ),
@@ -275,6 +268,21 @@ class _LogViewerState extends ConsumerState<LogViewer> {
         ),
       ],
     );
+  }
+
+  Future<void> _loadData() async {
+    if (_viewType == ViewType.graph) {
+      await ref.read(logNotifierProvider.notifier).fetchDateRange(
+        startDate: _startDate,
+        endDate: _endDate,
+        grouping: _grouping,
+      );
+    } else {
+      await ref.read(tableLogNotifierProvider.notifier).fetchDateRange(
+        startDate: _startDate,
+        endDate: _endDate,
+      );
+    }
   }
 
   Widget _buildTableView(List<ZoneLog> logs) {
@@ -484,8 +492,8 @@ class _LogViewerState extends ConsumerState<LogViewer> {
             onTap: () {
               setState(() {
                 _selectedZones.clear();
-                _loadData();
               });
+              _loadData();
             },
           ),
           ...enabledZones.map((zone) => PopupMenuItem<int?>(
@@ -502,8 +510,8 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                         _selectedZones.add(zone.id);
                       }
                     });
-                    _loadData();
                   });
+                  _loadData();
                 },
                 child: Row(
                   children: [
@@ -511,15 +519,13 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                       value: _selectedZones.contains(zone.id),
                       onChanged: (bool? value) {
                         setState(() {
-                          setItemState(() {
-                            if (value == true) {
-                              _selectedZones.add(zone.id);
-                            } else {
-                              _selectedZones.remove(zone.id);
-                            }
-                          });
-                          _loadData();
+                          if (value == true) {
+                            _selectedZones.add(zone.id);
+                          } else {
+                            _selectedZones.remove(zone.id);
+                          }
                         });
+                        _loadData();
                       },
                     ),
                     Text(zone.name),

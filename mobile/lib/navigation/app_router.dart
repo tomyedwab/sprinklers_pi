@@ -8,23 +8,15 @@ import '../screens/diagnostics/diagnostics_screen.dart';
 import '../screens/connection/connection_settings_screen.dart';
 import '../main.dart';
 import '../providers/connection_settings_provider.dart';
+import 'routes.dart';
 
-enum AppRoute {
-  dashboard,
-  zones,
-  schedules,
-  settings,
-  diagnostics,
-  connection,
-}
-
-class AppRouterDelegate extends RouterDelegate<AppRoute>
-    with ChangeNotifier, PopNavigatorRouterDelegateMixin<AppRoute> {
+class AppRouterDelegate extends RouterDelegate<RouteLocation>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin<RouteLocation> {
   final WidgetRef ref;
-  AppRoute _currentRoute;
+  RouteLocation _currentRoute;
   bool _showConnectionSettings = false;
 
-  AppRouterDelegate(this.ref) : _currentRoute = AppRoute.dashboard {
+  AppRouterDelegate(this.ref) : _currentRoute = RouteLocation(AppRoute.dashboard) {
     // Check if we need to show connection settings on startup
     final settingsAsync = ref.read(connectionSettingsProvider);
     settingsAsync.whenData((settings) {
@@ -37,9 +29,9 @@ class AppRouterDelegate extends RouterDelegate<AppRoute>
   @override
   final navigatorKey = GlobalKey<NavigatorState>();
 
-  AppRoute get currentRoute => _currentRoute;
+  RouteLocation get currentRoute => _currentRoute;
 
-  void setCurrentRoute(AppRoute route) {
+  void setCurrentRoute(RouteLocation route) {
     _currentRoute = route;
     notifyListeners();
   }
@@ -86,7 +78,7 @@ class AppRouterDelegate extends RouterDelegate<AppRoute>
   }
 
   @override
-  Future<void> setNewRoutePath(AppRoute configuration) async {
+  Future<void> setNewRoutePath(RouteLocation configuration) async {
     setCurrentRoute(configuration);
   }
 
@@ -101,7 +93,7 @@ class AppRouterDelegate extends RouterDelegate<AppRoute>
   }
 
   Widget _buildCurrentScreen() {
-    switch (_currentRoute) {
+    switch (_currentRoute.path) {
       case AppRoute.dashboard:
         return const DashboardScreen();
       case AppRoute.zones:
@@ -112,8 +104,8 @@ class AppRouterDelegate extends RouterDelegate<AppRoute>
         return const SettingsScreen();
       case AppRoute.diagnostics:
         return const DiagnosticsScreen();
-      case AppRoute.connection:
-        return const ConnectionSettingsScreen();
+      default:
+        return const DashboardScreen();
     }
   }
 } 

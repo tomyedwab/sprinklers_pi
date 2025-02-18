@@ -5,6 +5,7 @@ import '../providers/system_state_provider.dart';
 import '../models/schedule.dart';
 import '../navigation/navigation_state.dart';
 import '../navigation/app_router.dart';
+import '../navigation/routes.dart';
 
 class UpcomingSchedulesCard extends ConsumerWidget {
   const UpcomingSchedulesCard({super.key});
@@ -143,7 +144,7 @@ class UpcomingSchedulesCard extends ConsumerWidget {
                         child: TextButton(
                           onPressed: () {
                             final router = Router.of(context).routerDelegate as AppRouterDelegate;
-                            router.setCurrentRoute(AppRoute.schedules);
+                            router.setCurrentRoute(RouteLocation(AppRoute.schedules));
                           },
                           child: const Text('View All Schedules'),
                         ),
