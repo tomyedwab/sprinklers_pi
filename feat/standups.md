@@ -606,3 +606,27 @@ None
 - Will begin work on FLUTTER-310 diagnostics issues
 - Need to improve log viewer form styling
 - Plan to enhance graph visualization
+
+## 2024-04-06 - David Kim
+
+### Yesterday
+Fixed quick schedule implementation and improved documentation for zone durations.
+
+### Today
+Improved log viewer UI and functionality (FLUTTER-310):
+- Removed unnecessary text filter functionality to simplify the interface
+- Fixed visual issues with ExpansionTile borders in the table view
+- Improved zone filtering implementation:
+  - Fixed zone ID conversion between API and UI (0-based vs 1-based)
+  - Added proper filtering of logs based on selected zones
+  - Maintained multi-select functionality with clear visual feedback
+- Maintained proper state management with `_loadData()` calls on filter changes
+- Ensured consistent styling across all UI elements
+
+### Blockers
+None
+
+### Next
+- Will continue with remaining FLUTTER-310 tasks
+- Need to improve graph visualization
+- Plan to implement proper error states for weather integration

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../providers/log_provider.dart';
 import '../../../providers/zone_provider.dart';
 import '../../../api/models/log.dart' as api;
@@ -23,8 +24,6 @@ class LogViewer extends ConsumerStatefulWidget {
 }
 
 class _LogViewerState extends ConsumerState<LogViewer> {
-  final TextEditingController _searchController = TextEditingController();
-  String _filter = '';
   ViewType _viewType = ViewType.table;
   api.LogGrouping _grouping = api.LogGrouping.none;
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
@@ -39,7 +38,6 @@ class _LogViewerState extends ConsumerState<LogViewer> {
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -64,137 +62,35 @@ class _LogViewerState extends ConsumerState<LogViewer> {
     final logs = _viewType == ViewType.graph
         ? ref.watch(logNotifierProvider)
         : ref.watch(tableLogNotifierProvider);
+    final dateFormat = DateFormat('MMM d, y');
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              // View type toggle
-              SegmentedButton<ViewType>(
-                segments: const [
-                  ButtonSegment(
-                    value: ViewType.graph,
-                    icon: Icon(Icons.bar_chart),
-                    label: Text('Graph'),
-                  ),
-                  ButtonSegment(
-                    value: ViewType.table,
-                    icon: Icon(Icons.table_chart),
-                    label: Text('Table'),
-                  ),
-                ],
-                selected: {_viewType},
-                onSelectionChanged: (selected) {
-                  setState(() {
-                    _viewType = selected.first;
-                    _loadData();
-                  });
-                },
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-                    (states) {
-                      if (states.contains(MaterialState.selected)) {
-                        return Theme.of(context).colorScheme.primary;
-                      }
-                      return null;
-                    },
-                  ),
-                  foregroundColor: MaterialStateProperty.resolveWith<Color?>(
-                    (states) {
-                      if (states.contains(MaterialState.selected)) {
-                        return Theme.of(context).colorScheme.surface;
-                      }
-                      return Theme.of(context).colorScheme.onSurface;
-                    },
-                  ),
-                  iconColor: MaterialStateProperty.resolveWith<Color?>(
-                    (states) {
-                      if (states.contains(MaterialState.selected)) {
-                        return Theme.of(context).colorScheme.surface;
-                      }
-                      return Theme.of(context).colorScheme.onSurface;
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Date range selection
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.calendar_today),
-                      label: Text(
-                        'From: ${_startDate.toLocal().toString().split(' ')[0]}',
-                      ),
-                      onPressed: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: _startDate,
-                          firstDate: DateTime(2000),
-                          lastDate: _endDate,
-                        );
-                        if (date != null) {
-                          setState(() {
-                            _startDate = date;
-                            _loadData();
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.calendar_today),
-                      label: Text(
-                        'To: ${_endDate.toLocal().toString().split(' ')[0]}',
-                      ),
-                      onPressed: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: _endDate,
-                          firstDate: _startDate,
-                          lastDate: DateTime.now(),
-                        );
-                        if (date != null) {
-                          setState(() {
-                            _endDate = date;
-                            _loadData();
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              if (_viewType == ViewType.graph) ...[
-                const SizedBox(height: 8),
-                // Grouping options for graph view
-                SegmentedButton<api.LogGrouping>(
+        Card(
+          margin: const EdgeInsets.all(8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // View type toggle
+                SegmentedButton<ViewType>(
                   segments: const [
                     ButtonSegment(
-                      value: api.LogGrouping.none,
-                      label: Text('None'),
+                      value: ViewType.graph,
+                      icon: Icon(Icons.bar_chart),
+                      label: Text('Graph'),
                     ),
                     ButtonSegment(
-                      value: api.LogGrouping.hour,
-                      label: Text('Hour'),
-                    ),
-                    ButtonSegment(
-                      value: api.LogGrouping.dayOfWeek,
-                      label: Text('DOW'),
-                    ),
-                    ButtonSegment(
-                      value: api.LogGrouping.month,
-                      label: Text('Month'),
+                      value: ViewType.table,
+                      icon: Icon(Icons.table_chart),
+                      label: Text('Table'),
                     ),
                   ],
-                  selected: {_grouping},
+                  selected: {_viewType},
                   onSelectionChanged: (selected) {
                     setState(() {
-                      _grouping = selected.first;
+                      _viewType = selected.first;
                       _loadData();
                     });
                   },
@@ -225,48 +121,127 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                     ),
                   ),
                 ),
-              ],
-              const SizedBox(height: 8),
-              // Zone filters
-              zones.when(
-                data: (zones) => _buildZoneFilter(zones),
-                loading: () => const SizedBox(height: 52),  // Match filter height
-                error: (_, __) => StandardErrorWidget(
-                  message: 'Failed to load zones',
-                  type: ErrorType.network,
-                  showRetry: true,
-                  onPrimaryAction: () => ref.refresh(zonesNotifierProvider),
+                const SizedBox(height: 16),
+                // Date range selection
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(
+                          'From: ${dateFormat.format(_startDate.toLocal())}',
+                        ),
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _startDate,
+                            firstDate: DateTime(2000),
+                            lastDate: _endDate,
+                          );
+                          if (date != null) {
+                            setState(() {
+                              _startDate = date;
+                              _loadData();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(
+                          'To: ${dateFormat.format(_endDate.toLocal())}',
+                        ),
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _endDate,
+                            firstDate: _startDate,
+                            lastDate: DateTime.now(),
+                          );
+                          if (date != null) {
+                            setState(() {
+                              _endDate = date;
+                              _loadData();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              // Search filter (only for table view)
-              if (_viewType == ViewType.table) ...[
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: 'Filter Logs',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _filter.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _filter = '';
-                              });
-                            },
-                          )
-                        : null,
-                    border: const OutlineInputBorder(),
+                if (_viewType == ViewType.graph) ...[
+                  const SizedBox(height: 16),
+                  // Grouping options for graph view
+                  SegmentedButton<api.LogGrouping>(
+                    segments: const [
+                      ButtonSegment(
+                        value: api.LogGrouping.none,
+                        label: Text('No Grouping'),
+                      ),
+                      ButtonSegment(
+                        value: api.LogGrouping.hour,
+                        label: Text('Hour'),
+                      ),
+                      ButtonSegment(
+                        value: api.LogGrouping.dayOfWeek,
+                        label: Text('DOW'),
+                      ),
+                      ButtonSegment(
+                        value: api.LogGrouping.month,
+                        label: Text('Month'),
+                      ),
+                    ],
+                    selected: {_grouping},
+                    onSelectionChanged: (selected) {
+                      setState(() {
+                        _grouping = selected.first;
+                        _loadData();
+                      });
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return Theme.of(context).colorScheme.primary;
+                          }
+                          return null;
+                        },
+                      ),
+                      foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return Theme.of(context).colorScheme.surface;
+                          }
+                          return Theme.of(context).colorScheme.onSurface;
+                        },
+                      ),
+                      iconColor: MaterialStateProperty.resolveWith<Color?>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return Theme.of(context).colorScheme.surface;
+                          }
+                          return Theme.of(context).colorScheme.onSurface;
+                        },
+                      ),
+                    ),
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _filter = value;
-                    });
-                  },
+                ],
+                const SizedBox(height: 16),
+                // Zone filters
+                zones.when(
+                  data: (zones) => _buildZoneFilter(zones),
+                  loading: () => const SizedBox(height: 52),  // Match filter height
+                  error: (_, __) => StandardErrorWidget(
+                    message: 'Failed to load zones',
+                    type: ErrorType.network,
+                    showRetry: true,
+                    onPrimaryAction: () => ref.refresh(zonesNotifierProvider),
+                  ),
                 ),
               ],
-            ],
+            ),
           ),
         ),
         Expanded(
@@ -309,13 +284,19 @@ class _LogViewerState extends ConsumerState<LogViewer> {
 
   Widget _buildTableView(List<ZoneLog> logs) {
     final zonesAsync = ref.watch(zonesNotifierProvider);
+    final dateFormat = DateFormat('MMM d, y h:mm a');
 
     return zonesAsync.when(
       data: (zones) {
+        // Filter logs based on selected zones
+        final filteredLogs = _selectedZones.isEmpty 
+          ? logs 
+          : logs.where((log) => _selectedZones.contains(log.zoneId - 1)).toList();
+
         return ListView.builder(
-          itemCount: logs.length,
+          itemCount: filteredLogs.length,
           itemBuilder: (context, index) {
-            final zoneLog = logs[index];
+            final zoneLog = filteredLogs[index];
             final zoneName = zones.firstWhere(
               (z) => z.id == zoneLog.zoneId - 1,
               orElse: () => Zone(
@@ -326,11 +307,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                 isPumpAssociated: false,
               ),
             ).name;
-            final entries = zoneLog.entries
-                .where((entry) =>
-                    _filter.isEmpty ||
-                    entry.date.toString().toLowerCase().contains(_filter.toLowerCase()))
-                .toList();
+            final entries = zoneLog.entries;
 
             if (entries.isEmpty) return const SizedBox.shrink();
 
@@ -339,6 +316,8 @@ class _LogViewerState extends ConsumerState<LogViewer> {
               child: ExpansionTile(
                 title: Text(zoneName),
                 subtitle: Text('${entries.length} entries'),
+                shape: const Border(),  // Remove default border
+                maintainState: true,  // Keep state when collapsed
                 children: entries.map((entry) {
                   final scheduleText = entry.isManual
                       ? 'Manual'
@@ -347,7 +326,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                           : 'Schedule ${entry.scheduleId}';
 
                   return ListTile(
-                    title: Text(entry.date.toString()),
+                    title: Text(dateFormat.format(entry.date.toLocal())),
                     subtitle: Text(
                       'Duration: ${entry.duration.inMinutes}:${(entry.duration.inSeconds % 60).toString().padLeft(2, '0')} • $scheduleText',
                     ),
@@ -355,13 +334,15 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildAdjustmentChip(
-                          'S: ${entry.seasonalAdjustment}%',
+                          'Seasonal: ${entry.seasonalAdjustment}%',
                           entry.seasonalAdjustment,
+                          tooltip: 'Seasonal adjustment factor',
                         ),
                         const SizedBox(width: 4),
                         _buildAdjustmentChip(
-                          'W: ${entry.weatherAdjustment}%',
+                          'Weather: ${entry.weatherAdjustment}%',
                           entry.weatherAdjustment,
+                          tooltip: 'Weather-based adjustment factor',
                         ),
                       ],
                     ),
@@ -379,29 +360,34 @@ class _LogViewerState extends ConsumerState<LogViewer> {
     );
   }
 
-  Widget _buildAdjustmentChip(String label, int adjustment) {
+  Widget _buildAdjustmentChip(String label, int adjustment, {String? tooltip}) {
     Color? color;
-    if (adjustment != 100) {
+    if (adjustment != 100 && adjustment != -1) {
       color = adjustment < 100 ? Colors.red[100] : Colors.green[100];
     }
 
-    return Container(
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color,
+        color: adjustment == -1 ? Colors.grey[100] : color,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        label,
+        adjustment == -1 ? 'N/A' : label,
         style: TextStyle(
-          color: color != null
-              ? color == Colors.red[100]
-                  ? Colors.red[900]
-                  : Colors.green[900]
-              : null,
+          color: adjustment == -1 ? Colors.grey[600] : null,
         ),
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(
+        message: tooltip,
+        child: chip,
+      );
+    }
+
+    return chip;
   }
 
   Widget _buildGraphView(Map<int, List<GraphPoint>> graphData) {
@@ -494,26 +480,75 @@ class _LogViewerState extends ConsumerState<LogViewer> {
   }
 
   Widget _buildZoneFilter(List<Zone> zones) {
-    return Wrap(
-      spacing: 8,
-      children: zones
-          .where((zone) => zone.isEnabled)
-          .map(
-            (zone) => FilterChip(
-              label: Text(zone.name),
-              selected: _selectedZones.contains(zone.id),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    _selectedZones.add(zone.id);
-                  } else {
-                    _selectedZones.remove(zone.id);
-                  }
-                });
-              },
+    final enabledZones = zones.where((zone) => zone.isEnabled).toList();
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Filter by Zones',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      child: PopupMenuButton<int?>(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            _selectedZones.isEmpty 
+              ? 'All Zones' 
+              : '${_selectedZones.length} Zone${_selectedZones.length == 1 ? '' : 's'} Selected'
+          ),
+        ),
+        itemBuilder: (context) => [
+          PopupMenuItem<int?>(
+            value: null,
+            child: const Text('All Zones'),
+            onTap: () {
+              setState(() {
+                _selectedZones.clear();
+                _loadData();
+              });
+            },
+          ),
+          ...enabledZones.map((zone) => PopupMenuItem<int?>(
+            value: zone.id,
+            enabled: false,  // Disable item selection to prevent menu from closing
+            child: StatefulBuilder(
+              builder: (context, setItemState) => InkWell(
+                onTap: () {
+                  setState(() {
+                    setItemState(() {
+                      if (_selectedZones.contains(zone.id)) {
+                        _selectedZones.remove(zone.id);
+                      } else {
+                        _selectedZones.add(zone.id);
+                      }
+                    });
+                    _loadData();
+                  });
+                },
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _selectedZones.contains(zone.id),
+                      onChanged: (bool? value) {
+                        setState(() {
+                          setItemState(() {
+                            if (value == true) {
+                              _selectedZones.add(zone.id);
+                            } else {
+                              _selectedZones.remove(zone.id);
+                            }
+                          });
+                          _loadData();
+                        });
+                      },
+                    ),
+                    Text(zone.name),
+                  ],
+                ),
+              ),
             ),
-          )
-          .toList(),
+          )),
+        ],
+      ),
     );
   }
 }
@@ -563,58 +598,142 @@ class GraphPainter extends CustomPainter {
 
     // Calculate x and y scales using the selected date range
     final timeRange = endDate.difference(startDate);
-    final xScale = size.width / timeRange.inMilliseconds;
+    double xScale;
+    List<DateTime> xAxisPoints;
+
+    switch (grouping) {
+      case api.LogGrouping.hour:
+        // For hourly grouping, divide the day into 24 segments
+        xAxisPoints = List.generate(6, (i) {
+          final hour = (startDate.hour + (i * 4)) % 24;
+          return DateTime(startDate.year, startDate.month, startDate.day, hour);
+        });
+        xScale = size.width / 24;
+        break;
+      case api.LogGrouping.dayOfWeek:
+        // For daily grouping, show all 7 days
+        xAxisPoints = List.generate(7, (i) {
+          return startDate.add(Duration(days: i));
+        });
+        xScale = size.width / 7;
+        break;
+      case api.LogGrouping.month:
+        // For monthly grouping, show all 12 months
+        xAxisPoints = List.generate(12, (i) {
+          return DateTime(startDate.year, startDate.month + i);
+        });
+        xScale = size.width / 12;
+        break;
+      case api.LogGrouping.none:
+      default:
+        // For no grouping, use time-based scale with 6 evenly spaced points
+        xAxisPoints = List.generate(6, (i) {
+          return startDate.add(Duration(milliseconds: (timeRange.inMilliseconds * i ~/ 5)));
+        });
+        xScale = size.width / timeRange.inMilliseconds;
+        break;
+    }
+
     final yScale = size.height / maxValue.inMinutes;
 
     // Move to first point
-    final firstPoint = points.first;
-    final startX = firstPoint.timestamp.difference(startDate).inMilliseconds * xScale;
-    final startY = size.height - (firstPoint.value.inMinutes * yScale);
-    path.moveTo(startX, startY);
-    fillPath.moveTo(startX, size.height);
-    fillPath.lineTo(startX, startY);
+    if (points.isNotEmpty) {
+      final firstPoint = points.first;
+      double startX;
+      switch (grouping) {
+        case api.LogGrouping.hour:
+          startX = firstPoint.timestamp.hour * xScale;
+          break;
+        case api.LogGrouping.dayOfWeek:
+          startX = firstPoint.timestamp.weekday * xScale;
+          break;
+        case api.LogGrouping.month:
+          startX = (firstPoint.timestamp.month - 1) * xScale;
+          break;
+        case api.LogGrouping.none:
+        default:
+          startX = firstPoint.timestamp.difference(startDate).inMilliseconds * xScale;
+          break;
+      }
+      final startY = size.height - (firstPoint.value.inMinutes * yScale);
+      path.moveTo(startX, startY);
+      fillPath.moveTo(startX, size.height);
+      fillPath.lineTo(startX, startY);
 
-    // Draw lines between points
-    for (var i = 1; i < points.length; i++) {
-      final point = points[i];
-      final x = point.timestamp.difference(startDate).inMilliseconds * xScale;
-      final y = size.height - (point.value.inMinutes * yScale);
-      path.lineTo(x, y);
-      fillPath.lineTo(x, y);
+      // Draw lines between points
+      for (var i = 1; i < points.length; i++) {
+        final point = points[i];
+        double x;
+        switch (grouping) {
+          case api.LogGrouping.hour:
+            x = point.timestamp.hour * xScale;
+            break;
+          case api.LogGrouping.dayOfWeek:
+            x = point.timestamp.weekday * xScale;
+            break;
+          case api.LogGrouping.month:
+            x = (point.timestamp.month - 1) * xScale;
+            break;
+          case api.LogGrouping.none:
+          default:
+            x = point.timestamp.difference(startDate).inMilliseconds * xScale;
+            break;
+        }
+        final y = size.height - (point.value.inMinutes * yScale);
+        path.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+
+      // Complete fill path
+      double lastX;
+      switch (grouping) {
+        case api.LogGrouping.hour:
+          lastX = points.last.timestamp.hour * xScale;
+          break;
+        case api.LogGrouping.dayOfWeek:
+          lastX = points.last.timestamp.weekday * xScale;
+          break;
+        case api.LogGrouping.month:
+          lastX = (points.last.timestamp.month - 1) * xScale;
+          break;
+        case api.LogGrouping.none:
+        default:
+          lastX = points.last.timestamp.difference(startDate).inMilliseconds * xScale;
+          break;
+      }
+      fillPath.lineTo(lastX, size.height);
+      fillPath.close();
+
+      // Draw fill and line
+      canvas.drawPath(fillPath, fillPaint);
+      canvas.drawPath(path, paint);
     }
-
-    // Complete fill path
-    fillPath.lineTo(points.last.timestamp.difference(startDate).inMilliseconds * xScale, size.height);
-    fillPath.close();
-
-    // Draw fill and line
-    canvas.drawPath(fillPath, fillPaint);
-    canvas.drawPath(path, paint);
 
     // Draw time labels
     final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
     );
 
-    // Draw x-axis labels (6 evenly spaced points)
-    for (var i = 0; i <= 5; i++) {
-      final timestamp = startDate.add(
-        Duration(milliseconds: (timeRange.inMilliseconds * i ~/ 5)),
-      );
-      final x = (timestamp.difference(startDate).inMilliseconds * xScale);
+    // Draw x-axis labels
+    for (final timestamp in xAxisPoints) {
+      double x;
       String label;
       switch (grouping) {
         case api.LogGrouping.hour:
+          x = timestamp.hour * xScale;
           label = '${timestamp.hour}:00';
           break;
         case api.LogGrouping.dayOfWeek:
+          x = timestamp.weekday * xScale;
           label = _getDayName(timestamp.weekday);
           break;
         case api.LogGrouping.month:
+          x = (timestamp.month - 1) * xScale;
           label = _getMonthName(timestamp.month);
           break;
         case api.LogGrouping.none:
+        default:
+          x = timestamp.difference(startDate).inMilliseconds * xScale;
           label = '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
           break;
       }
