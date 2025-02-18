@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
 import '../../../providers/log_provider.dart';
 import '../../../providers/zone_provider.dart';
 import '../../../api/models/log.dart' as api;
@@ -8,8 +9,6 @@ import '../../../models/log.dart';
 import '../../../api/models/zone.dart';
 import '../../../widgets/standard_error_widget.dart';
 import '../../../widgets/loading_states.dart';
-
-// TODO: Fix graph x axis scaling
 
 enum ViewType {
   graph,
@@ -25,7 +24,7 @@ class LogViewer extends ConsumerStatefulWidget {
 
 class _LogViewerState extends ConsumerState<LogViewer> {
   ViewType _viewType = ViewType.table;
-  api.LogGrouping _grouping = api.LogGrouping.none;
+  api.LogGrouping _grouping = api.LogGrouping.month;
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
   DateTime _endDate = DateTime.now();
   Set<int> _selectedZones = {};
@@ -176,10 +175,6 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                   // Grouping options for graph view
                   SegmentedButton<api.LogGrouping>(
                     segments: const [
-                      ButtonSegment(
-                        value: api.LogGrouping.none,
-                        label: Text('No Grouping'),
-                      ),
                       ButtonSegment(
                         value: api.LogGrouping.hour,
                         label: Text('Hour'),
@@ -401,80 +396,66 @@ class _LogViewerState extends ConsumerState<LogViewer> {
           );
         }
 
-        return ListView.builder(
-          itemCount: graphData.length,
-          itemBuilder: (context, index) {
-            final zoneId = graphData.keys.elementAt(index);
-            final points = graphData[zoneId]!;
-            final zoneName = zones.firstWhere(
-              (z) => z.id == zoneId - 1,
-              orElse: () => Zone(
-                id: zoneId - 1,
-                name: 'Zone ${zoneId}',
-                isEnabled: true,
-                state: false,
-                isPumpAssociated: false,
-              ),
-            ).name;
+        // Get all selected zones or all enabled zones if none selected
+        final filteredZones = _selectedZones.isEmpty
+            ? zones.where((z) => z.isEnabled).toList()
+            : zones.where((z) => _selectedZones.contains(z.id)).toList();
 
-            if (points.isEmpty) return const SizedBox.shrink();
+        // Collect all data points and find global max value
+        final allPoints = <List<GraphPoint>>[];
+        Duration globalMax = Duration.zero;
+        
+        for (final zone in filteredZones) {
+          final zoneId = zone.id + 1; // Convert back to API zone ID
+          final points = graphData[zoneId] ?? [];
+          allPoints.add(points);
+          
+          final zoneMax = points.fold<Duration>(
+            Duration.zero,
+            (max, point) => point.value > max ? point.value : max,
+          );
+          if (zoneMax > globalMax) globalMax = zoneMax;
+        }
 
-            return Card(
-              margin: const EdgeInsets.all(8.0),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      zoneName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+        return Card(
+          margin: const EdgeInsets.all(8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Zone Runtime',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 400,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => CustomPaint(
+                      size: Size(constraints.maxWidth, constraints.maxHeight),
+                      painter: GraphPainter(
+                        allSeries: allPoints,
+                        zones: filteredZones,
+                        maxValue: globalMax,
+                        grouping: _grouping,
+                        startDate: _startDate,
+                        endDate: _endDate,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 200,
-                      child: _buildGraph(points),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          },
+              ],
+            ),
+          ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stackTrace) => Center(
         child: Text('Error: $error'),
-      ),
-    );
-  }
-
-  Widget _buildGraph(List<GraphPoint> points) {
-    // Sort points by timestamp
-    points.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-
-    // Find max value for y-axis scaling
-    final maxValue = points.fold<Duration>(
-      Duration.zero,
-      (max, point) => point.value > max ? point.value : max,
-    );
-
-    if (maxValue == Duration.zero) {
-      return const Center(
-        child: Text('No data available'),
-      );
-    }
-
-    return CustomPaint(
-      painter: GraphPainter(
-        points: points,
-        maxValue: maxValue,
-        grouping: _grouping,
-        startDate: _startDate,
-        endDate: _endDate,
       ),
     );
   }
@@ -554,14 +535,17 @@ class _LogViewerState extends ConsumerState<LogViewer> {
 }
 
 class GraphPainter extends CustomPainter {
-  final List<GraphPoint> points;
+  final List<List<GraphPoint>> allSeries;
+  final List<Zone> zones;
   final Duration maxValue;
   final api.LogGrouping grouping;
   final DateTime startDate;
   final DateTime endDate;
+  final List<Color> _colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple];
 
   GraphPainter({
-    required this.points,
+    required this.allSeries,
+    required this.zones,
     required this.maxValue,
     required this.grouping,
     required this.startDate,
@@ -570,237 +554,196 @@ class GraphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 2
+    final axisPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
-    final fillPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.2)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final fillPath = Path();
-
-    // Draw axes
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(size.width, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      const Offset(0, 0),
-      Offset(0, size.height),
-      paint,
-    );
-
-    if (points.isEmpty) return;
-
-    // Calculate x and y scales using the selected date range
-    final timeRange = endDate.difference(startDate);
-    double xScale;
-    List<DateTime> xAxisPoints;
-
-    switch (grouping) {
-      case api.LogGrouping.hour:
-        // For hourly grouping, divide the day into 24 segments
-        xAxisPoints = List.generate(6, (i) {
-          final hour = (startDate.hour + (i * 4)) % 24;
-          return DateTime(startDate.year, startDate.month, startDate.day, hour);
-        });
-        xScale = size.width / 24;
-        break;
-      case api.LogGrouping.dayOfWeek:
-        // For daily grouping, show all 7 days
-        xAxisPoints = List.generate(7, (i) {
-          return startDate.add(Duration(days: i));
-        });
-        xScale = size.width / 7;
-        break;
-      case api.LogGrouping.month:
-        // For monthly grouping, show all 12 months
-        xAxisPoints = List.generate(12, (i) {
-          return DateTime(startDate.year, startDate.month + i);
-        });
-        xScale = size.width / 12;
-        break;
-      case api.LogGrouping.none:
-      default:
-        // For no grouping, use time-based scale with 6 evenly spaced points
-        xAxisPoints = List.generate(6, (i) {
-          return startDate.add(Duration(milliseconds: (timeRange.inMilliseconds * i ~/ 5)));
-        });
-        xScale = size.width / timeRange.inMilliseconds;
-        break;
-    }
-
-    final yScale = size.height / maxValue.inMinutes;
-
-    // Move to first point
-    if (points.isNotEmpty) {
-      final firstPoint = points.first;
-      double startX;
-      switch (grouping) {
-        case api.LogGrouping.hour:
-          startX = firstPoint.timestamp.hour * xScale;
-          break;
-        case api.LogGrouping.dayOfWeek:
-          startX = firstPoint.timestamp.weekday * xScale;
-          break;
-        case api.LogGrouping.month:
-          startX = (firstPoint.timestamp.month - 1) * xScale;
-          break;
-        case api.LogGrouping.none:
-        default:
-          startX = firstPoint.timestamp.difference(startDate).inMilliseconds * xScale;
-          break;
-      }
-      final startY = size.height - (firstPoint.value.inMinutes * yScale);
-      path.moveTo(startX, startY);
-      fillPath.moveTo(startX, size.height);
-      fillPath.lineTo(startX, startY);
-
-      // Draw lines between points
-      for (var i = 1; i < points.length; i++) {
-        final point = points[i];
-        double x;
-        switch (grouping) {
-          case api.LogGrouping.hour:
-            x = point.timestamp.hour * xScale;
-            break;
-          case api.LogGrouping.dayOfWeek:
-            x = point.timestamp.weekday * xScale;
-            break;
-          case api.LogGrouping.month:
-            x = (point.timestamp.month - 1) * xScale;
-            break;
-          case api.LogGrouping.none:
-          default:
-            x = point.timestamp.difference(startDate).inMilliseconds * xScale;
-            break;
-        }
-        final y = size.height - (point.value.inMinutes * yScale);
-        path.lineTo(x, y);
-        fillPath.lineTo(x, y);
-      }
-
-      // Complete fill path
-      double lastX;
-      switch (grouping) {
-        case api.LogGrouping.hour:
-          lastX = points.last.timestamp.hour * xScale;
-          break;
-        case api.LogGrouping.dayOfWeek:
-          lastX = points.last.timestamp.weekday * xScale;
-          break;
-        case api.LogGrouping.month:
-          lastX = (points.last.timestamp.month - 1) * xScale;
-          break;
-        case api.LogGrouping.none:
-        default:
-          lastX = points.last.timestamp.difference(startDate).inMilliseconds * xScale;
-          break;
-      }
-      fillPath.lineTo(lastX, size.height);
-      fillPath.close();
-
-      // Draw fill and line
-      canvas.drawPath(fillPath, fillPaint);
-      canvas.drawPath(path, paint);
-    }
-
-    // Draw time labels
     final textPainter = TextPainter(
       textAlign: TextAlign.center,
+      textDirection: ui.TextDirection.ltr,
     );
-
-    // Draw x-axis labels
-    for (final timestamp in xAxisPoints) {
-      double x;
-      String label;
-      switch (grouping) {
-        case api.LogGrouping.hour:
-          x = timestamp.hour * xScale;
-          label = '${timestamp.hour}:00';
-          break;
-        case api.LogGrouping.dayOfWeek:
-          x = timestamp.weekday * xScale;
-          label = _getDayName(timestamp.weekday);
-          break;
-        case api.LogGrouping.month:
-          x = (timestamp.month - 1) * xScale;
-          label = _getMonthName(timestamp.month);
-          break;
-        case api.LogGrouping.none:
-        default:
-          x = timestamp.difference(startDate).inMilliseconds * xScale;
-          label = '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
-          break;
-      }
-
-      textPainter.text = TextSpan(
-        text: label,
-        style: const TextStyle(fontSize: 10),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(x - textPainter.width / 2, size.height + 4),
-      );
-    }
-
+    
     // Draw y-axis labels
+    double leftOffset = 0;
     for (var i = 0; i <= 5; i++) {
       final value = (maxValue.inMinutes * i / 5).round();
       textPainter.text = TextSpan(
         text: '$value min',
-        style: const TextStyle(fontSize: 10),
+        style: const TextStyle(fontSize: 10, color: Colors.black),
       );
       textPainter.layout();
       textPainter.paint(
         canvas,
-        Offset(-textPainter.width - 4, size.height - (i * size.height / 5) - textPainter.height / 2),
+        Offset(0, size.height - (i * size.height / 5) - textPainter.height / 2),
+      );
+      if (textPainter.width > leftOffset) {
+        leftOffset = textPainter.width;
+      }
+    }
+    leftOffset += 5;
+
+    // Draw axes
+    canvas.drawLine(
+      Offset(leftOffset, size.height),
+      Offset(size.width, size.height),
+      axisPaint,
+    );
+    canvas.drawLine(
+      Offset(leftOffset, 0),
+      Offset(leftOffset, size.height),
+      axisPaint,
+    );
+
+
+    if (allSeries.isEmpty || maxValue == Duration.zero) return;
+
+    // Calculate x-axis scale and labels
+    final xAxisData = _calculateXAxis(size.width - leftOffset);
+    final xScale = xAxisData['scale'] as double;
+    final xLabels = xAxisData['labels'] as List<String>;
+
+    // Calculate dynamic bar sizing based on number of series
+    final barWidth = (xScale * 0.8) / allSeries.length;
+    final barSpacing = xScale * 0.2 / (allSeries.length + 1);
+
+    // Calculate y-scale
+    final yScale = size.height / maxValue.inMinutes;
+
+    // Draw x-axis labels
+    for (var i = 0; i < xLabels.length; i++) {
+      final xPos = (i * xScale) + (xScale / 2);
+      textPainter.text = TextSpan(
+        text: xLabels[i],
+        style: const TextStyle(fontSize: 10, color: Colors.black),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(leftOffset + xPos - textPainter.width / 2, size.height + 4),
       );
     }
+
+    // Draw bars for each data series
+    for (var seriesIndex = 0; seriesIndex < allSeries.length; seriesIndex++) {
+      final series = allSeries[seriesIndex];
+      final color = _colors[seriesIndex % _colors.length];
+      final barPaint = Paint()
+        ..color = color.withOpacity(0.7)
+        ..style = PaintingStyle.fill;
+
+      for (var bucketIndex = 0; bucketIndex < series.length; bucketIndex++) {
+        final totalDuration = series[bucketIndex].value;
+        final bucketCenter = leftOffset + (bucketIndex * xScale) + (xScale / 2);
+        final barOffset = bucketCenter - (barWidth * allSeries.length / 2) + 
+                         (seriesIndex * (barWidth + barSpacing));
+
+        double barHeight = totalDuration.inMinutes * yScale;
+        if (barHeight < 2) {
+          barHeight = 2;
+        }
+        
+        canvas.drawRect(
+          Rect.fromLTRB(
+            barOffset,
+            size.height - barHeight,
+            barOffset + barWidth,
+            size.height,
+          ),
+          barPaint,
+        );
+      }
+    }
+
+
+    // Draw legend
+    const legendSquareSize = 12.0;
+    var legendX = size.width - 120;
+    var legendY = 8.0;
+    
+    for (var i = 0; i < zones.length; i++) {
+      final color = _colors[i % _colors.length];
+      canvas.drawRect(
+        Rect.fromLTWH(legendX, legendY, legendSquareSize, legendSquareSize),
+        Paint()..color = color,
+      );
+      
+      textPainter.text = TextSpan(
+        text: zones[i].name,
+        style: const TextStyle(fontSize: 10, color: Colors.black),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(legendX + legendSquareSize + 4, legendY));
+      
+      legendY += legendSquareSize + 4;
+    }
+  }
+
+  /// Groups data points into buckets based on current grouping
+  List<Duration> _bucketData(List<GraphPoint> series, int bucketCount) {
+    final buckets = List<Duration>.filled(bucketCount, Duration.zero);
+    
+    for (final point in series) {
+      final bucketIndex = _getBucketIndex(point.timestamp, bucketCount);
+      buckets[bucketIndex] += point.value;
+    }
+    
+    return buckets;
+  }
+
+  int _getBucketIndex(DateTime timestamp, int bucketCount) {
+    switch (grouping) {
+      case api.LogGrouping.hour:
+        return timestamp.hour;
+      case api.LogGrouping.dayOfWeek:
+        return timestamp.weekday - 1; // 0-6 for Monday-Sunday
+      case api.LogGrouping.month:
+        return timestamp.month - 1; // 0-11 for January-December
+      default:
+        final daysFromStart = timestamp.difference(startDate).inDays;
+        return daysFromStart.clamp(0, bucketCount - 1);
+    }
+  }
+
+  Map<String, dynamic> _calculateXAxis(double width) {
+    final labels = <String>[];
+    int bucketCount;
+    
+    switch (grouping) {
+      case api.LogGrouping.hour:
+        bucketCount = 24;
+        labels.addAll(List.generate(24, (i) => '${i.toString().padLeft(2, '0')}:00'));
+        break;
+      case api.LogGrouping.dayOfWeek:
+        bucketCount = 7;
+        labels.addAll(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+        break;
+      case api.LogGrouping.month:
+        bucketCount = 12;
+        labels.addAll(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+        break;
+      default:
+        bucketCount = endDate.difference(startDate).inDays + 1;
+        final dateFormat = DateFormat('MMM d');
+        labels.addAll(List.generate(bucketCount, (i) => 
+          dateFormat.format(startDate.add(Duration(days: i)))));
+        break;
+    }
+
+    return {
+      'scale': width / bucketCount,
+      'labels': labels,
+      'bucketCount': bucketCount,
+    };
   }
 
   @override
   bool shouldRepaint(covariant GraphPainter oldDelegate) {
-    return points != oldDelegate.points ||
+    return allSeries != oldDelegate.allSeries ||
         maxValue != oldDelegate.maxValue ||
         grouping != oldDelegate.grouping ||
         startDate != oldDelegate.startDate ||
         endDate != oldDelegate.endDate;
-  }
-
-  String _getDayName(int weekday) {
-    switch (weekday) {
-      case DateTime.monday: return 'Mon';
-      case DateTime.tuesday: return 'Tue';
-      case DateTime.wednesday: return 'Wed';
-      case DateTime.thursday: return 'Thu';
-      case DateTime.friday: return 'Fri';
-      case DateTime.saturday: return 'Sat';
-      case DateTime.sunday: return 'Sun';
-      default: return '';
-    }
-  }
-
-  String _getMonthName(int month) {
-    switch (month) {
-      case DateTime.january: return 'Jan';
-      case DateTime.february: return 'Feb';
-      case DateTime.march: return 'Mar';
-      case DateTime.april: return 'Apr';
-      case DateTime.may: return 'May';
-      case DateTime.june: return 'Jun';
-      case DateTime.july: return 'Jul';
-      case DateTime.august: return 'Aug';
-      case DateTime.september: return 'Sep';
-      case DateTime.october: return 'Oct';
-      case DateTime.november: return 'Nov';
-      case DateTime.december: return 'Dec';
-      default: return '';
-    }
   }
 } 

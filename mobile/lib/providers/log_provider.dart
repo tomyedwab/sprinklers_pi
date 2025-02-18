@@ -18,7 +18,7 @@ class LogNotifier extends _$LogNotifier {
   Future<Map<int, List<GraphPoint>>> _fetchLogs({
     required DateTime startDate,
     required DateTime endDate,
-    api.LogGrouping grouping = api.LogGrouping.none,
+    api.LogGrouping grouping = api.LogGrouping.month,
   }) async {
     final apiClient = ref.read(apiClientProvider);
     final response = await apiClient.getLogs(
@@ -36,7 +36,7 @@ class LogNotifier extends _$LogNotifier {
   Future<Map<int, List<GraphPoint>>> fetchDateRange({
     required DateTime startDate,
     required DateTime endDate,
-    api.LogGrouping grouping = api.LogGrouping.none,
+    api.LogGrouping grouping = api.LogGrouping.month,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchLogs(

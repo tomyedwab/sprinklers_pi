@@ -159,7 +159,7 @@ FLUTTER-309: Schedule management bugs & issues (Assigned: David Kim, Status: Don
 - Editor Save button should be grayed out when there are no changes
 - Dismissing the editor should warn when there are unsaved changes
 
-FLUTTER-310: Diagnostics bugs & issues (Assigned: David Kim)
+FLUTTER-310: Diagnostics bugs & issues (Assigned: David Kim, Status: Done)
 - Logs form widgets are not wrapped in a card
 - Zone filter should be a multi-select dropdown
 - Grouping by "None" is not self-evident; should be "No Grouping"
