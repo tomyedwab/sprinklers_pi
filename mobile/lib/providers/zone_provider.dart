@@ -15,19 +15,22 @@ class ZonesNotifier extends _$ZonesNotifier {
     return apiClient.getZones();
   }
 
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _fetchZones());
+  }
+
   Future<void> toggleZone(int zoneId, bool enable) async {
     final apiClient = ref.read(apiClientProvider);
     await apiClient.toggleZone(zoneId, enable);
     // Refresh the zones list
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchZones());
+    await refresh();
   }
 
   Future<void> updateZone(Zone zone) async {
     final apiClient = ref.read(apiClientProvider);
     await apiClient.updateZone(zone);
     // Refresh the zones list
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchZones());
+    await refresh();
   }
 } 

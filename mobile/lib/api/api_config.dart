@@ -54,4 +54,5 @@ class ApiConfig {
   static const String logs = '/json/logs';
   static const String tableLogs = '/json/tlogs';
   static const String chatterBox = '/bin/chatter';
+  static const String run = '/bin/run';
 } 

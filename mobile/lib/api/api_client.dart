@@ -143,6 +143,22 @@ class ApiClient {
     }
   }
 
+  /// Stop all running zones
+  Future<void> stopAllZones() async {
+    try {
+      await _get(
+        ApiConfig.manualControl,
+        {
+          'zone': 'all',
+          'state': 'off',
+        },
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to stop all zones: ${e.toString()}');
+    }
+  }
+
   /// Update zone settings
   Future<void> updateZone(Zone zone) async {
     try {
@@ -229,12 +245,16 @@ class ApiClient {
   /// Execute a quick schedule
   /// 
   /// [request] contains either a schedule ID to run immediately
-  /// or a map of zone durations for a custom quick schedule
+  /// or a map of zone durations for a custom quick schedule.
+  /// When using a custom schedule (sched="-1"), durations MUST be 
+  /// specified for ALL enabled zones. Missing zone durations will
+  /// retain their previous values from memory.
   Future<void> executeQuickSchedule(ApiQuickScheduleRequest request) async {
     try {
       await _get(ApiConfig.quickSchedule, request.toParams());
     } catch (e) {
-      throw ApiException('Failed to execute quick schedule: $e');
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to execute quick schedule: ${e.toString()}');
     }
   }
 
@@ -345,6 +365,21 @@ class ApiClient {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to save settings: ${e.toString()}');
+    }
+  }
+
+  /// Enable or disable the entire system
+  Future<void> setSystemEnabled(bool enabled) async {
+    try {
+      await _get(
+        ApiConfig.run,
+        {
+          'system': enabled ? 'on' : 'off',
+        },
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Failed to ${enabled ? 'enable' : 'disable'} system: ${e.toString()}');
     }
   }
 }

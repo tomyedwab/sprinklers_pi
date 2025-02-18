@@ -1,18 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 import '../../models/zone.dart';
 import '../../providers/zone_provider.dart';
-import '../../widgets/system_status_card.dart';
+import '../../providers/system_state_provider.dart';
 import '../../widgets/active_zone_card.dart';
 import '../../widgets/upcoming_schedules_card.dart';
 import '../../widgets/weather_card.dart';
-import '../../widgets/quick_actions_card.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startRefreshTimer();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startRefreshTimer() {
+    // Refresh every 15 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _refreshData();
+    });
+  }
+
+  Future<void> _refreshData() async {
+    await Future.wait([
+      ref.read(systemStateNotifierProvider.notifier).refresh(),
+      ref.read(zonesNotifierProvider.notifier).refresh(),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 600;
 
@@ -31,17 +64,13 @@ class DashboardScreen extends ConsumerWidget {
               Icons.refresh,
               color: Theme.of(context).colorScheme.secondary,
             ),
-            onPressed: () {
-              // TODO: Implement refresh functionality
-            },
+            onPressed: _refreshData,
           ),
         ],
       ),
       body: RefreshIndicator(
         color: Theme.of(context).colorScheme.primary,
-        onRefresh: () async {
-          // TODO: Implement pull-to-refresh functionality
-        },
+        onRefresh: _refreshData,
         child: isWideScreen
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,8 +84,6 @@ class DashboardScreen extends ConsumerWidget {
                         children: const [
                           ActiveZoneCard(),
                           SizedBox(height: 16),
-                          QuickActionsCard(),
-                          SizedBox(height: 16),
                           WeatherCard(),
                         ],
                       ),
@@ -69,8 +96,6 @@ class DashboardScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: const [
-                          SystemStatusCard(),
-                          SizedBox(height: 16),
                           UpcomingSchedulesCard(),
                         ],
                       ),
@@ -81,11 +106,7 @@ class DashboardScreen extends ConsumerWidget {
             : ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: const [
-                  SystemStatusCard(),
-                  SizedBox(height: 16),
                   ActiveZoneCard(),
-                  SizedBox(height: 16),
-                  QuickActionsCard(),
                   SizedBox(height: 16),
                   UpcomingSchedulesCard(),
                   SizedBox(height: 16),

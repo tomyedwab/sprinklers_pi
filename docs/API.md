@@ -138,7 +138,13 @@ Where {b-z} represents the zone ID (b=1, c=2, etc.)
 **Method**: GET  
 **Parameters**:
 - `sched`: Schedule ID or "-1" for custom
-- `z{a-z}`: Zone duration for custom schedule (0-255 minutes)
+- `z{b-z}`: Zone duration in minutes (0-255) where 'b'=Zone 1, 'c'=Zone 2, etc.
+
+**Notes**:
+- When using a custom schedule (`sched="-1"`), durations MUST be specified for ALL enabled zones
+- Missing zone durations will retain their previous values from memory
+- Zone durations map directly to zones: zb=Zone 1 duration, zc=Zone 2 duration, etc.
+- Returns an empty response on success
 
 ## System Settings
 
@@ -169,6 +175,19 @@ Where {b-z} represents the zone ID (b=1, c=2, etc.)
 **Endpoint**: `/bin/settings`  
 **Method**: GET  
 **Parameters**: All fields from settings structure above
+
+### Enable/Disable System
+**Endpoint**: `/bin/run`  
+**Method**: GET  
+**Parameters**:
+- `system`: System state ("on"/"off")
+
+**Description**: Controls the global system state. When disabled, scheduled watering is suspended but manual control remains available.
+
+**Notes**:
+- Returns an empty response on success
+- System state persists across restarts
+- Manual zone control remains available even when system is disabled
 
 ### Get System State
 **Endpoint**: `/json/state`  

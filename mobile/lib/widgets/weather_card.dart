@@ -35,6 +35,8 @@ class _WeatherContent extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
+    final isRaining = weather.precipitation > 0 || weather.precipitationToday > 0;
+    final isDaytime = DateTime.now().hour >= 6 && DateTime.now().hour < 20;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,9 +44,20 @@ class _WeatherContent extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Weather', style: theme.textTheme.titleLarge),
-            Text('${weather.scale}% Adjustment',
-                style: theme.textTheme.titleMedium),
+            const Text(
+              'Weather',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Icon(
+              isDaytime 
+                ? (isRaining ? Icons.water : Icons.wb_sunny)
+                : (isRaining ? Icons.water_drop : Icons.nightlight),
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -74,6 +87,7 @@ class _WeatherContent extends StatelessWidget {
                 icon: Icons.umbrella,
                 label: 'Rain',
                 value: '${(weather.precipitation + weather.precipitationToday).toStringAsFixed(2)}in',
+                subtitle: isRaining ? 'Recent rainfall detected' : null,
               ),
             ),
             Expanded(
@@ -81,6 +95,7 @@ class _WeatherContent extends StatelessWidget {
                 icon: Icons.air,
                 label: 'Wind',
                 value: '${weather.windSpeed.round()} mph',
+                subtitle: weather.windSpeed > 10 ? 'High wind conditions' : null,
               ),
             ),
           ],
@@ -92,6 +107,58 @@ class _WeatherContent extends StatelessWidget {
           value: (weather.uvIndex / 10).toStringAsFixed(1),
           subtitle: _getUVDescription(weather.uvIndex / 10),
         ),
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Watering Adjustment',
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Based on current conditions, watering times will be ${weather.scale < 100 ? 'reduced' : (weather.scale > 100 ? 'increased' : 'unchanged')}.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondary,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                '${weather.scale}%',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.surface,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (weather.scale != 100) ...[
+          const SizedBox(height: 8),
+          Text(
+            weather.scale < 100
+              ? 'Recent rainfall and humidity levels have reduced the need for watering.'
+              : 'Hot and dry conditions have increased the need for watering.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.secondary,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -124,16 +191,26 @@ class _WeatherTile extends StatelessWidget {
     
     return Row(
       children: [
-        Icon(icon, size: 24),
+        Icon(icon, size: 24, color: theme.colorScheme.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label, style: theme.textTheme.bodyMedium),
-              Text(value, style: theme.textTheme.titleMedium),
+              Text(
+                value, 
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
               if (subtitle != null)
-                Text(subtitle!, style: theme.textTheme.bodySmall),
+                Text(
+                  subtitle!, 
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.secondary,
+                  ),
+                ),
             ],
           ),
         ),
@@ -149,6 +226,8 @@ class _WeatherError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -176,7 +255,11 @@ class _WeatherNotConfigured extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.cloud_off, size: 48),
+        Icon(
+          Icons.cloud_off,
+          size: 48,
+          color: theme.colorScheme.error,
+        ),
         const SizedBox(height: 16),
         Text(
           'Weather Provider Not Configured',
@@ -186,7 +269,9 @@ class _WeatherNotConfigured extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Configure weather settings to enable automatic adjustments',
-          style: theme.textTheme.bodyMedium,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           textAlign: TextAlign.center,
         ),
       ],

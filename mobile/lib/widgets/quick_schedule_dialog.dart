@@ -5,6 +5,7 @@ import '../models/zone.dart';
 import '../providers/quick_schedule_provider.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/zone_provider.dart';
+import '../providers/system_state_provider.dart';
 
 class QuickScheduleDialog extends ConsumerStatefulWidget {
   const QuickScheduleDialog({super.key});
@@ -120,6 +121,8 @@ class _QuickScheduleDialogState extends ConsumerState<QuickScheduleDialog> {
               } else if (_selectedScheduleId != null) {
                 await quickSchedule.executeSchedule(_selectedScheduleId!);
               }
+              // Refresh state after starting schedule
+              ref.read(systemStateNotifierProvider.notifier).refresh();
               if (mounted) {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(

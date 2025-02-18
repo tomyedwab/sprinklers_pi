@@ -26,4 +26,15 @@ class SystemStateNotifier extends _$SystemStateNotifier {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => build());
   }
+
+  Future<void> setEnabled(bool enabled) async {
+    state = const AsyncValue.loading();
+    try {
+      final client = ref.read(apiClientProvider);
+      await client.setSystemEnabled(enabled);
+      state = await AsyncValue.guard(() => build());
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
 } 

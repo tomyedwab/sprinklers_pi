@@ -132,6 +132,37 @@ FLUTTER-306: Application settings (Assigned: Maya Patel, Status: Done)
 - Time synchronization
 - Output configuration
 
+FLUTTER-307: Dashboard bugs & issues (Assigned: Maya Patel, Status: Done)
+- Pull to refresh/refresh icon do not work
+- State should update every 15 seconds
+- State should update immediately after starting a "quick run" or toggling system state
+- "Next Run" and "Rain Delay" buttons do nothing and should be removed
+- Active zone indicator has a useless progress bar. Should either show minutes remaining or be removed.
+- "Stop All" button does not work
+- "View All" button on Upcoming Schedules card does nothing
+- Weather card should include some explanation of what "N% Adjustment" means
+- Weather card should have a graphic icon showing day/night and whether it is raining
+
+FLUTTER-308: Zone and schedule management bugs & issues (Assigned: David Kim)
+- The icon next to the zone name doesn't look anything like a pump
+- The zone editor needs some explanation of what "Pump Associated" means
+- Schedule list is lacking information about the actual schedule, only showing the next run
+- Enable/disable widget is visually inconsistent between Dashboard, Zones and Schedules screens
+- Zone editor is narrower than the schedule editor for no reason
+- Zone editor should have cancel/save buttons like the schedule editor
+- Zone editor is missing a "weather adjust" toggle
+- Days-of-week selector has black text on a dark navy background, should be consistent with the other widgets
+- Schedule editor should show times in 12-hour format with AM/PM
+
+FLUTTER-309: Diagnostics bugs & issues (Assigned: David Kim)
+- Logs form widgets are not wrapped in a card
+- Zone filter should be a multi-select dropdown
+- Grouping by "None" is not self-evident; should be "No Grouping"
+- Graph X axis is still incorrect
+- Table date formatting should be more human-readable
+- The SAdj and WUnd chips need additional context
+- SAdj and WUnd should not show -1% as this is likely a special "N/A" value
+
 ## FLUTTER-4: Connection & Login
 
 FLUTTER-401: Connection settings (Assigned: Luis Rodriguez, Status: Done)
@@ -144,77 +175,24 @@ FLUTTER-402: Authentication (Assigned: Luis Rodriguez, Status: Done)
 - Shared cookies between web view and API client
 - Logout button on Settings screen
 
-## FLUTTER-5: Background Services & Offline Support
+## FLUTTER-5: Beta Testing and Polish
 
-FLUTTER-501: Background Services (Assigned: Luis Rodriguez)
-- Push notifications using Firebase Cloud Messaging for:
-  - Active watering
-  - Schedule completion
-  - System warnings
-  - Weather alerts
-- Background status monitoring using WorkManager
-
-FLUTTER-502: Offline Support (Assigned: David Kim)
-- Local data caching with Hive/SQLite
-- Offline schedule viewing
-- Queue changes for sync
-- Conflict resolution
-
-FLUTTER-503: Security Implementation (Assigned: Luis Rodriguez)
-- Implement authentication
-- Secure API communication
-- Local data encryption
-- Access control
-
-FLUTTER-504: Performance Optimization (Assigned: Maya Patel)
-- Implement lazy loading with ListView.builder
-- Optimize large lists with Flutter's built-in virtualization
-- Cache management
-- Memory usage optimization using DevTools
-
-## FLUTTER-6: Testing and Deployment Epic
-
-FLUTTER-601: Testing Implementation (Assigned: James Wilson)
+FLUTTER-501: Testing Implementation (Assigned: James Wilson)
 - Widget tests
 - Integration tests with Flutter Driver
 - Golden image tests
 - Performance testing with DevTools
 - Platform compatibility testing
 
-FLUTTER-602: Beta Testing Management (Assigned: Sarah Chen)
-- Internal testing phase
-- Firebase App Distribution setup
-- User feedback collection
-- Bug tracking and fixes
-
-FLUTTER-603: Documentation (Assigned: Sarah Chen)
-- API integration docs
-- Widget documentation
-- Setup instructions
-- User guide
-- Troubleshooting guide
-
-FLUTTER-604: Release Preparation (Assigned: Luis Rodriguez)
-- Play Store and App Store listings
-- Web deployment setup
+FLUTTER-502: Release Preparation (Assigned: Luis Rodriguez)
+- Application icon and splash screen
+- Play Store listing
 - Marketing materials
 - Release notes
 - Version management
 - Update strategy
 
-## Timeline Estimates
-- Phase 1: 2 weeks
-- Phase 2: 3 weeks
-- Phase 3: 6 weeks
-- Phase 4: 4 weeks
-- Phase 5: 3 weeks
-
-Total estimated time: 18 weeks
-
 ## Success Criteria
 1. All existing web UI functionality available across platforms
 2. Improved user experience for touch interfaces
-3. Offline capability for core functions
-4. Real-time updates and notifications
-5. Comprehensive test coverage
-6. Successful deployment to Play Store, App Store, and web
+3. Successful deployment to Play Store
