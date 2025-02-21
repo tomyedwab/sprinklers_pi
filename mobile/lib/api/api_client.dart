@@ -71,7 +71,6 @@ class ApiClient {
       if (needsWebCookies) {
         final cookies = await WebViewCookieJar.cookieJar.loadForRequest(request.url);
         request.headers['Cookie'] = cookies.map((c) => '${c.name}=${c.value}').join('; ');
-        print("Cookie: ${request.headers['Cookie']}");
       }
       
       final response = await _client.send(request)
