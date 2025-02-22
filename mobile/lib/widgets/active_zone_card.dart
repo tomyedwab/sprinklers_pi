@@ -61,6 +61,40 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
     ]);
   }
 
+  Widget _buildNoActiveZones() {
+    return Center(
+      child: Column(
+        children: [
+          Icon(
+            Icons.water_drop_outlined,
+            size: 48,
+            color: AppTheme.of(context).inactiveZoneColor,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No Active Zones',
+            style: TextStyle(
+              fontSize: 18,
+              color: AppTheme.of(context).inactiveZoneColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder: (context) => const QuickScheduleDialog(),
+              );
+              await _refreshState();
+            },
+            icon: const Icon(Icons.play_circle_outline),
+            label: const Text('Quick Run'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final zonesAsync = ref.watch(zonesNotifierProvider);
@@ -75,39 +109,10 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
       });
     });
 
-    return zonesAsync.when(
-      loading: () => const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ),
-      error: (error, stackTrace) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Colors.red,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Error: ${error.toString()}',
-                style: const TextStyle(
-                  color: Colors.red,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      data: (zones) {
-        final activeZone = zones.where((z) => z.state).firstOrNull;
-
-        return Card(
-          child: Padding(
+    return Card(
+      child: Stack(
+        children: [
+          Padding(
             padding: Spacing.cardPaddingAll,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,114 +122,118 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 SizedBox(height: Spacing.contentSpacing),
-                if (activeZone == null) ...[
-                  Center(
+                zonesAsync.when(
+                  loading: () => _buildNoActiveZones(),
+                  error: (error, stackTrace) => Center(
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.water_drop_outlined,
+                        const Icon(
+                          Icons.error_outline,
                           size: 48,
-                          color: AppTheme.of(context).inactiveZoneColor,
+                          color: Colors.red,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'No Active Zones',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: AppTheme.of(context).inactiveZoneColor,
+                          'Error: ${error.toString()}',
+                          style: const TextStyle(
+                            color: Colors.red,
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: () async {
-                            await showDialog(
-                              context: context,
-                              builder: (context) => const QuickScheduleDialog(),
-                            );
-                            await _refreshState();
-                          },
-                          icon: const Icon(Icons.play_circle_outline),
-                          label: const Text('Quick Run'),
                         ),
                       ],
                     ),
                   ),
-                ] else
-                  systemStateAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, stackTrace) => Center(
-                      child: Text('Error: ${error.toString()}'),
-                    ),
-                    data: (systemState) {
-                      final remainingTime = systemState.remainingTime;
-                      final isManual = remainingTime?.inSeconds == 99999;
-                      final displayTime = isManual ? remainingTime : _localRemainingTime ?? remainingTime;
+                  data: (zones) {
+                    final activeZone = zones.where((z) => z.state).firstOrNull;
+                    if (activeZone == null) {
+                      return _buildNoActiveZones();
+                    }
 
-                      return Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.water_drop,
-                                size: 32,
-                                color: AppTheme.of(context).activeZoneColor,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      activeZone.name,
-                                      style: AppTheme.of(context).valueTextStyle,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      isManual 
-                                        ? 'Manual Mode'
-                                        : displayTime != null 
-                                          ? 'Time Remaining: ${_formatDuration(displayTime)}'
-                                          : 'Time remaining unknown',
-                                      style: AppTheme.of(context).subtitleTextStyle,
-                                    ),
-                                  ],
+                    return systemStateAsync.when(
+                      loading: () => _buildNoActiveZones(),
+                      error: (error, stackTrace) => Center(
+                        child: Text('Error: ${error.toString()}'),
+                      ),
+                      data: (systemState) {
+                        final remainingTime = systemState.remainingTime;
+                        final isManual = remainingTime?.inSeconds == 99999;
+                        final displayTime = isManual ? remainingTime : _localRemainingTime ?? remainingTime;
+
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.water_drop,
+                                  size: 32,
+                                  color: AppTheme.of(context).activeZoneColor,
                                 ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  _timer?.cancel(); // Cancel timer when stopping zone
-                                  await ref.read(zonesNotifierProvider.notifier)
-                                      .toggleZone(activeZone.id, false);
-                                  await _refreshState();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.of(context).disabledStateColor,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        activeZone.name,
+                                        style: AppTheme.of(context).valueTextStyle,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        isManual 
+                                          ? 'Manual Mode'
+                                          : displayTime != null 
+                                            ? 'Time Remaining: ${_formatDuration(displayTime)}'
+                                            : 'Time remaining unknown',
+                                        style: AppTheme.of(context).subtitleTextStyle,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                child: const Text('Stop'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton.icon(
-                            onPressed: () async {
-                              await showDialog(
-                                context: context,
-                                builder: (context) => const QuickScheduleDialog(),
-                              );
-                              await _refreshState();
-                            },
-                            icon: const Icon(Icons.play_circle_outline),
-                            label: const Text('Quick Run'),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    _timer?.cancel(); // Cancel timer when stopping zone
+                                    await ref.read(zonesNotifierProvider.notifier)
+                                        .toggleZone(activeZone.id, false);
+                                    await _refreshState();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.of(context).disabledStateColor,
+                                  ),
+                                  child: const Text('Stop'),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton.icon(
+                              onPressed: () async {
+                                await showDialog(
+                                  context: context,
+                                  builder: (context) => const QuickScheduleDialog(),
+                                );
+                                await _refreshState();
+                              },
+                              icon: const Icon(Icons.play_circle_outline),
+                              label: const Text('Quick Run'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
               ],
             ),
           ),
-        );
-      },
+          if (zonesAsync.isLoading || systemStateAsync.isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.1),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 } 

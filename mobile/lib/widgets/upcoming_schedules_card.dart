@@ -19,140 +19,142 @@ class UpcomingSchedulesCard extends ConsumerWidget {
     final appTheme = AppTheme.of(context);
 
     return Card(
-      child: Padding(
-        padding: Spacing.cardPaddingAll,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Upcoming Schedules',
-              style: appTheme.cardTitleStyle,
-            ),
-            SizedBox(height: Spacing.contentSpacing),
-            systemStateAsync.when(
-              loading: () => const Center(
-                child: SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+      child: Stack(
+        children: [
+          Padding(
+            padding: Spacing.cardPaddingAll,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Upcoming Schedules',
+                  style: appTheme.cardTitleStyle,
                 ),
-              ),
-              error: (_, __) => Center(
-                child: Icon(Icons.error, color: appTheme.disabledStateColor, size: 24),
-              ),
-              data: (state) => Center(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                SizedBox(height: Spacing.contentSpacing),
+                systemStateAsync.when(
+                  loading: () => _buildSystemStateContent(context, ref, null, appTheme),
+                  error: (_, __) => _buildSystemStateContent(context, ref, null, appTheme),
+                  data: (state) => _buildSystemStateContent(context, ref, state, appTheme),
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                schedulesAsync.when(
+                  loading: () => _buildNoSchedulesContent(appTheme),
+                  error: (error, stackTrace) => Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'Error loading schedules: $error',
+                        style: TextStyle(color: appTheme.disabledStateColor),
+                      ),
+                    ),
+                  ),
+                  data: (schedules) {
+                    if (schedules.isEmpty) {
+                      return _buildNoSchedulesContent(appTheme);
+                    }
+
+                    // Filter enabled schedules with next run time
+                    final upcomingSchedules = schedules
+                        .where((s) => s.isEnabled && s.nextRun != null)
+                        .toList();
+
+                    if (upcomingSchedules.isEmpty) {
+                      return _buildNoSchedulesContent(appTheme);
+                    }
+
+                    return Column(
                       children: [
-                        Text(
-                          state.isRunning ? 'System Enabled' : 'System Disabled',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: state.isRunning ? appTheme.enabledStateColor : appTheme.disabledStateColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Switch(
-                          value: state.isRunning,
-                          onChanged: (value) {
-                            ref.read(systemStateNotifierProvider.notifier).setEnabled(value);
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: upcomingSchedules.length,
+                          separatorBuilder: (context, index) => const Divider(),
+                          itemBuilder: (context, index) {
+                            final schedule = upcomingSchedules[index];
+                            return _buildScheduleItem(context, schedule);
                           },
                         ),
+                        if (schedules.length > upcomingSchedules.length) ...[
+                          const SizedBox(height: 16),
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                final router = Router.of(context).routerDelegate as AppRouterDelegate;
+                                router.setCurrentRoute(RouteLocation(AppRoute.schedules));
+                              },
+                              child: const Text('View All Schedules'),
+                            ),
+                          ),
+                        ],
                       ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      state.isRunning 
-                        ? 'Schedules and manual watering are enabled'
-                        : 'Scheduled watering is disabled; manual control only',
-                      style: appTheme.statusTextStyle,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 8),
-            schedulesAsync.when(
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
+          ),
+          if (schedulesAsync.isLoading || systemStateAsync.isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.1),
+                child: const Center(
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (error, stackTrace) => Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    'Error loading schedules: $error',
-                    style: TextStyle(color: appTheme.disabledStateColor),
-                  ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSystemStateContent(BuildContext context, WidgetRef ref, dynamic state, AppTheme appTheme) {
+    final isRunning = state?.isRunning ?? false;
+    
+    return Center(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                isRunning ? 'System Enabled' : 'System Disabled',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isRunning ? appTheme.enabledStateColor : appTheme.disabledStateColor,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              data: (schedules) {
-                if (schedules.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'No upcoming schedules',
-                        style: TextStyle(color: appTheme.inactiveZoneColor),
-                      ),
-                    ),
-                  );
-                }
+              const SizedBox(width: 12),
+              Switch(
+                value: isRunning,
+                onChanged: state == null ? null : (value) {
+                  ref.read(systemStateNotifierProvider.notifier).setEnabled(value);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isRunning 
+              ? 'Schedules and manual watering are enabled'
+              : 'Scheduled watering is disabled; manual control only',
+            style: appTheme.statusTextStyle,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 
-                // Filter enabled schedules with next run time
-                final upcomingSchedules = schedules
-                    .where((s) => s.isEnabled && s.nextRun != null)
-                    .toList();
-
-                if (upcomingSchedules.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'No upcoming schedules',
-                        style: TextStyle(color: appTheme.inactiveZoneColor),
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: [
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: upcomingSchedules.length,
-                      separatorBuilder: (context, index) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final schedule = upcomingSchedules[index];
-                        return _buildScheduleItem(context, schedule);
-                      },
-                    ),
-                    if (schedules.length > upcomingSchedules.length) ...[
-                      const SizedBox(height: 16),
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            final router = Router.of(context).routerDelegate as AppRouterDelegate;
-                            router.setCurrentRoute(RouteLocation(AppRoute.schedules));
-                          },
-                          child: const Text('View All Schedules'),
-                        ),
-                      ),
-                    ],
-                  ],
-                );
-              },
-            ),
-          ],
+  Widget _buildNoSchedulesContent(AppTheme appTheme) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'No upcoming schedules',
+          style: TextStyle(color: appTheme.inactiveZoneColor),
         ),
       ),
     );

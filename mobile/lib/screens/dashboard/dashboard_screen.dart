@@ -116,13 +116,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Column(
                 children: [
                   SkeletonCard(
-                    height: 180,
                     isLoading: isLoading,
                     child: const ActiveZoneCard(),
                   ),
                   SizedBox(height: Spacing.cardSpacing),
                   SkeletonCard(
-                    height: 160,
                     isLoading: isLoading,
                     child: const WeatherCard(),
                   ),
@@ -138,7 +136,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Column(
                 children: [
                   SkeletonCard(
-                    height: 240,
                     isLoading: isLoading,
                     child: const UpcomingSchedulesCard(),
                   ),
@@ -154,19 +151,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       padding: Spacing.screenPaddingAll,
       children: [
         SkeletonCard(
-          height: 180,
           isLoading: isLoading,
           child: const ActiveZoneCard(),
         ),
         SizedBox(height: Spacing.cardSpacing),
         SkeletonCard(
-          height: 240,
           isLoading: isLoading,
           child: const UpcomingSchedulesCard(),
         ),
         SizedBox(height: Spacing.cardSpacing),
         SkeletonCard(
-          height: 160,
           isLoading: isLoading,
           child: const WeatherCard(),
         ),

@@ -1,14 +1,5 @@
 # Mobile App Bug Tracker
 
-## Dashboard Screen Issues
-
-### Potential Improvements
-
-10. **State Management Optimization**
-    - Consider using select() to avoid unnecessary rebuilds
-    - Could split widgets into smaller components for better rebuild isolation
-    - Add proper loading and error states for each card widget
-
 ## Zones Screen Issues
 
 ### Critical Issues

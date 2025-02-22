@@ -13,13 +13,26 @@ class WeatherCard extends ConsumerWidget {
     final weatherAsync = ref.watch(weatherAutoRefreshProvider);
 
     return Card(
-      child: Padding(
-        padding: Spacing.cardPaddingAll,
-        child: weatherAsync.when(
-          data: (weather) => _WeatherContent(weather: weather),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => _WeatherError(onRetry: () => ref.refresh(weatherNotifierProvider)),
-        ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: Spacing.cardPaddingAll,
+            child: weatherAsync.when(
+              data: (weather) => _WeatherContent(weather: weather),
+              loading: () => _WeatherLoadingContent(),
+              error: (error, stack) => _WeatherError(onRetry: () => ref.refresh(weatherNotifierProvider)),
+            ),
+          ),
+          if (weatherAsync.isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.1),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -163,6 +176,119 @@ class _WeatherContent extends StatelessWidget {
     if (uv >= 6) return 'High';
     if (uv >= 3) return 'Moderate';
     return 'Low';
+  }
+}
+
+class _WeatherLoadingContent extends StatelessWidget {
+  const _WeatherLoadingContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final appTheme = AppTheme.of(context);
+    final isDaytime = DateTime.now().hour >= 6 && DateTime.now().hour < 20;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Weather',
+              style: appTheme.cardTitleStyle,
+            ),
+            Icon(
+              isDaytime ? Icons.wb_sunny : Icons.nightlight,
+              color: appTheme.weatherIconColor,
+              size: 24,
+            ),
+          ],
+        ),
+        SizedBox(height: Spacing.contentSpacing),
+        Row(
+          children: [
+            Expanded(
+              child: _WeatherTile(
+                icon: Icons.thermostat,
+                label: 'Temperature',
+                value: '-°F',
+              ),
+            ),
+            Expanded(
+              child: _WeatherTile(
+                icon: Icons.water_drop,
+                label: 'Humidity',
+                value: '-%',
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: Spacing.contentSpacing),
+        Row(
+          children: [
+            Expanded(
+              child: _WeatherTile(
+                icon: Icons.umbrella,
+                label: 'Rain',
+                value: '-in',
+              ),
+            ),
+            Expanded(
+              child: _WeatherTile(
+                icon: Icons.air,
+                label: 'Wind',
+                value: '- mph',
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: Spacing.contentSpacing),
+        _WeatherTile(
+          icon: Icons.wb_sunny,
+          label: 'UV Index',
+          value: '-',
+          subtitle: '-',
+        ),
+        SizedBox(height: Spacing.contentSpacing),
+        const Divider(),
+        SizedBox(height: Spacing.contentSpacing),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Watering Adjustment',
+                    style: appTheme.cardTitleStyle,
+                  ),
+                  SizedBox(height: Spacing.contentSpacing),
+                  Text(
+                    'Loading watering adjustment...',
+                    style: appTheme.statusTextStyle,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: appTheme.weatherIconColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                '-%',
+                style: appTheme.valueTextStyle.copyWith(
+                  color: Theme.of(context).colorScheme.surface,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
