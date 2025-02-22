@@ -1,3 +1,18 @@
+// Helper functions for standardized parameter conversion
+String _stringOrDefault(dynamic value, String defaultValue) => value as String? ?? defaultValue;
+bool _stringToBool(String? value) => value == 'on';
+String _boolToString(bool value) => value ? 'on' : 'off';
+int _parseIntSafe(dynamic value, int defaultValue) {
+  if (value == null) return defaultValue;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  try {
+    return int.parse(value.toString());
+  } catch (_) {
+    return defaultValue;
+  }
+}
+
 // Schedule list response models
 class ApiScheduleListItem {
   final int id;
@@ -14,10 +29,10 @@ class ApiScheduleListItem {
 
   factory ApiScheduleListItem.fromJson(Map<String, dynamic> json) {
     return ApiScheduleListItem(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      e: json['e'] as String,
-      next: json['next'] as String,
+      id: _parseIntSafe(json['id'], 0),
+      name: _stringOrDefault(json['name'], ''),
+      e: _stringOrDefault(json['e'], 'off'),
+      next: _stringOrDefault(json['next'], ''),
     );
   }
 
@@ -38,9 +53,9 @@ class ApiScheduleList {
 
   factory ApiScheduleList.fromJson(Map<String, dynamic> json) {
     return ApiScheduleList(
-      table: (json['Table'] as List<dynamic>)
-          .map((e) => ApiScheduleListItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      table: (json['Table'] as List<dynamic>?)
+          ?.map((e) => ApiScheduleListItem.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 
@@ -61,8 +76,8 @@ class ApiScheduleTime {
 
   factory ApiScheduleTime.fromJson(Map<String, dynamic> json) {
     return ApiScheduleTime(
-      t: json['t'] as String,
-      e: json['e'] as String,
+      t: _stringOrDefault(json['t'], '00:00'),
+      e: _stringOrDefault(json['e'], 'off'),
     );
   }
 
@@ -83,8 +98,8 @@ class ApiScheduleZone {
 
   factory ApiScheduleZone.fromJson(Map<String, dynamic> json) {
     return ApiScheduleZone(
-      duration: json['duration'] as int,
-      e: json['e'] as String,
+      duration: _parseIntSafe(json['duration'], 0),
+      e: _stringOrDefault(json['e'], 'off'),
     );
   }
 
@@ -131,25 +146,25 @@ class ApiScheduleDetail {
 
   factory ApiScheduleDetail.fromJson(Map<String, dynamic> json) {
     return ApiScheduleDetail(
-      name: json['name'] as String,
-      enabled: json['enabled'] as String,
-      type: json['type'] as String,
-      interval: json['interval'] as String,
-      restrict: json['restrict'] as String,
-      wadj: json['wadj'] as String,
-      d1: json['d1'] as String,
-      d2: json['d2'] as String,
-      d3: json['d3'] as String,
-      d4: json['d4'] as String,
-      d5: json['d5'] as String,
-      d6: json['d6'] as String,
-      d7: json['d7'] as String,
-      times: (json['times'] as List<dynamic>)
-          .map((e) => ApiScheduleTime.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      zones: (json['zones'] as List<dynamic>)
-          .map((e) => ApiScheduleZone.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      name: _stringOrDefault(json['name'], ''),
+      enabled: _stringOrDefault(json['enabled'], 'off'),
+      type: _stringOrDefault(json['type'], 'off'),
+      interval: _stringOrDefault(json['interval'], '1'),
+      restrict: _stringOrDefault(json['restrict'], '0'),
+      wadj: _stringOrDefault(json['wadj'], 'off'),
+      d1: _stringOrDefault(json['d1'], 'off'),
+      d2: _stringOrDefault(json['d2'], 'off'),
+      d3: _stringOrDefault(json['d3'], 'off'),
+      d4: _stringOrDefault(json['d4'], 'off'),
+      d5: _stringOrDefault(json['d5'], 'off'),
+      d6: _stringOrDefault(json['d6'], 'off'),
+      d7: _stringOrDefault(json['d7'], 'off'),
+      times: (json['times'] as List<dynamic>?)
+          ?.map((e) => ApiScheduleTime.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
+      zones: (json['zones'] as List<dynamic>?)
+          ?.map((e) => ApiScheduleZone.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 

@@ -21,10 +21,10 @@ class Zone {
     // In the response, we don't get an ID, but we can infer it from the position in the array
     return Zone(
       id: 0, // This will be set by the API client based on array position
-      name: json['name'] as String,
-      isEnabled: json['enabled'] == 'on',
-      state: json['state'] == 'on',
-      isPumpAssociated: json['pump'] == 'on',
+      name: json['name'] as String? ?? '',  // Default to empty string if null
+      isEnabled: (json['enabled'] as String?) == 'on',  // Handle null case
+      state: (json['state'] as String?) == 'on',  // Handle null case
+      isPumpAssociated: (json['pump'] as String?) == 'on',  // Handle null case
     );
   }
 

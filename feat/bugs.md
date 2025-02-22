@@ -1,44 +1,5 @@
 # Mobile App Bug Tracker
 
-## API Client and Models Issues
-
-### Critical Issues
-
-1. **Inconsistent Error Handling in ApiClient**
-   - The `_get` method catches and wraps all errors in `ApiException`, but some method-specific catch blocks re-wrap ApiExceptions unnecessarily
-   - Example: Most methods have `if (e is ApiException) rethrow;` which is redundant since _get already wraps non-ApiExceptions
-   - Impact: Could cause double-wrapped exceptions and confusing error messages
-
-2. **Missing Null Safety in API Response Parsing**
-   - The API documentation shows several optional fields, but some model parsing doesn't properly handle null values
-   - Example: `ApiSystemState` handles optional fields like `onzone` and `offtime`, but other models might not follow this pattern
-   - Risk: Could cause runtime errors when API returns null for optional fields
-
-### Moderate Issues
-
-5. **Inconsistent Parameter Type Handling**
-   - Some methods convert parameters to string using toString() directly
-   - Others use more specific conversions or type checking
-   - Should standardize parameter conversion approach across all methods
-
-7. **Timeout Handling**
-   - Timeout is only applied to the initial request in `_get` method
-   - Response stream conversion isn't timeout protected
-   - Could lead to hanging requests in poor network conditions
-
-### Minor Issues
-
-8. **Inconsistent Method Documentation**
-   - Some methods have detailed documentation while others lack it
-   - Example: `executeQuickSchedule` has detailed docs but `resetSystem` doesn't
-   - Should standardize documentation across all public methods
-
-### Potential Improvements
-
-11. **Request Retry Logic**
-    - No retry mechanism for transient failures
-    - Consider adding retry logic for idempotent operations
-
 ## Dashboard Screen Issues
 
 ### Critical Issues

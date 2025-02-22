@@ -1,3 +1,18 @@
+// Helper functions for standardized parameter conversion
+String _stringOrDefault(dynamic value, String defaultValue) => value as String? ?? defaultValue;
+bool _stringToBool(String? value) => value == 'true';
+String _boolToString(bool value) => value.toString();
+int _parseIntSafe(dynamic value, int defaultValue) {
+  if (value == null) return defaultValue;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  try {
+    return int.parse(value.toString());
+  } catch (_) {
+    return defaultValue;
+  }
+}
+
 class ApiWeatherCheck {
   final bool noprovider;
   final bool keynotfound;
@@ -29,31 +44,32 @@ class ApiWeatherCheck {
 
   factory ApiWeatherCheck.fromJson(Map<String, dynamic> json) {
     return ApiWeatherCheck(
-      noprovider: json['noprovider'] == 'true',
-      keynotfound: json['keynotfound'] == 'true',
-      valid: json['valid'] == 'true',
-      resolvedIP: json['resolvedIP'] as String,
-      scale: int.parse(json['scale'] as String),
-      meantempi: int.parse(json['meantempi'] as String),
-      minhumidity: int.parse(json['minhumidity'] as String),
-      maxhumidity: int.parse(json['maxhumidity'] as String),
-      precip: int.parse(json['precip'] as String),
-      precip_today: int.parse(json['precip_today'] as String),
-      wind_mph: int.parse(json['wind_mph'] as String),
-      UV: int.parse(json['UV'] as String),
+      noprovider: _stringToBool(json['noprovider'] as String?),
+      keynotfound: _stringToBool(json['keynotfound'] as String?),
+      valid: _stringToBool(json['valid'] as String?),
+      resolvedIP: _stringOrDefault(json['resolvedIP'], ''),
+      scale: _parseIntSafe(json['scale'], 100),  // Default to 100% if null
+      meantempi: _parseIntSafe(json['meantempi'], 70),  // Default to 70°F if null
+      minhumidity: _parseIntSafe(json['minhumidity'], 30),  // Default to 30% if null
+      maxhumidity: _parseIntSafe(json['maxhumidity'], 30),  // Default to 30% if null
+      precip: _parseIntSafe(json['precip'], 0),  // Default to 0 if null
+      precip_today: _parseIntSafe(json['precip_today'], 0),  // Default to 0 if null
+      wind_mph: _parseIntSafe(json['wind_mph'], 0),  // Default to 0 if null
+      UV: _parseIntSafe(json['UV'], 0),  // Default to 0 if null
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'noprovider': noprovider.toString(),
-    'keynotfound': keynotfound.toString(),
-    'valid': valid.toString(),
+    'noprovider': _boolToString(noprovider),
+    'keynotfound': _boolToString(keynotfound),
+    'valid': _boolToString(valid),
     'resolvedIP': resolvedIP,
     'scale': scale.toString(),
     'meantempi': meantempi.toString(),
     'minhumidity': minhumidity.toString(),
     'maxhumidity': maxhumidity.toString(),
     'precip': precip.toString(),
+    'precip_today': precip_today.toString(),
     'wind_mph': wind_mph.toString(),
     'UV': UV.toString(),
   };
