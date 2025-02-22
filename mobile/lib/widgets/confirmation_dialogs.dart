@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/spacing.dart';
+import '../theme/app_theme.dart';
 
 /// Base confirmation dialog component
 class ConfirmActionDialog extends StatelessWidget {
@@ -41,19 +43,22 @@ class ConfirmActionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
     final effectiveAccentColor = accentColor ??
-        (isDestructive ? theme.colorScheme.error : theme.colorScheme.primary);
+        (isDestructive ? appTheme.disabledStateColor : appTheme.scheduleIconColor);
 
     return AlertDialog(
       icon: icon != null
           ? Icon(
               icon,
               color: effectiveAccentColor,
-              size: 32,
+              size: Spacing.xl, // 32
             )
           : null,
-      title: Text(title),
-      content: Text(message),
+      title: Text(title, style: appTheme.cardTitleStyle),
+      content: Text(message, style: appTheme.subtitleTextStyle),
+      contentPadding: EdgeInsets.all(Spacing.md),
+      actionsPadding: EdgeInsets.all(Spacing.sm),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),

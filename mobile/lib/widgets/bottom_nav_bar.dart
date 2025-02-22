@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../navigation/app_router.dart';
 import '../navigation/routes.dart';
+import '../theme/spacing.dart';
+import '../theme/app_theme.dart';
 
 class AppBottomNavBar extends ConsumerWidget {
   const AppBottomNavBar({super.key});
@@ -10,6 +12,7 @@ class AppBottomNavBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = Router.of(context).routerDelegate as AppRouterDelegate;
     final currentRoute = router.currentRoute;
+    final appTheme = AppTheme.of(context);
 
     // Map of route paths to their indices
     final routeIndices = {
@@ -39,7 +42,7 @@ class AppBottomNavBar extends ConsumerWidget {
       backgroundColor: const Color(0xFFf9fbfa), // Card Background from design spec
       elevation: 6,
       shadowColor: Colors.black.withOpacity(0.1), // 10% opacity black
-      height: 72, // Increased height for better touch targets
+      height: Spacing.xxl + Spacing.xl, // 80 (increased height for better touch targets)
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       indicatorColor: Colors.transparent, // Remove the indicator background
       destinations: [
@@ -53,13 +56,13 @@ class AppBottomNavBar extends ConsumerWidget {
           NavigationDestination(
             icon: Icon(
               destination.$1,
-              color: const Color(0xFF032e3f), // Icon Color from design spec
-              size: 24, // Icon size from design spec
+              color: appTheme.mutedTextColor,
+              size: Spacing.md + Spacing.xs, // 24
             ),
             selectedIcon: Icon(
               destination.$2,
-              color: const Color(0xFF057257), // Accent Color from design spec
-              size: 24,
+              color: appTheme.scheduleIconColor,
+              size: Spacing.md + Spacing.xs, // 24
             ),
             label: destination.$3,
           ),
