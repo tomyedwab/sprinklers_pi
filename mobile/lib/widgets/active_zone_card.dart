@@ -5,6 +5,8 @@ import '../providers/zone_provider.dart';
 import '../providers/system_state_provider.dart';
 import '../api/models/zone.dart';
 import 'quick_schedule_dialog.dart';
+import '../theme/spacing.dart';
+import '../theme/app_theme.dart';
 
 class ActiveZoneCard extends ConsumerStatefulWidget {
   const ActiveZoneCard({super.key});
@@ -106,33 +108,30 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
 
         return Card(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: Spacing.cardPaddingAll,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Watering',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Text(
+                  'Active Zone',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: Spacing.contentSpacing),
                 if (activeZone == null) ...[
                   Center(
                     child: Column(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.water_drop_outlined,
                           size: 48,
-                          color: Colors.grey,
+                          color: AppTheme.of(context).inactiveZoneColor,
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'No Active Zones',
                           style: TextStyle(
                             fontSize: 18,
-                            color: Colors.grey,
+                            color: AppTheme.of(context).inactiveZoneColor,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -165,10 +164,10 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
                         children: [
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.water_drop,
                                 size: 32,
-                                color: Colors.blue,
+                                color: AppTheme.of(context).activeZoneColor,
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -177,10 +176,7 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
                                   children: [
                                     Text(
                                       activeZone.name,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: AppTheme.of(context).valueTextStyle,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -189,11 +185,7 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
                                         : displayTime != null 
                                           ? 'Time Remaining: ${_formatDuration(displayTime)}'
                                           : 'Time remaining unknown',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Theme.of(context).colorScheme.secondary,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: AppTheme.of(context).subtitleTextStyle,
                                     ),
                                   ],
                                 ),
@@ -206,7 +198,7 @@ class _ActiveZoneCardState extends ConsumerState<ActiveZoneCard> {
                                   await _refreshState();
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppTheme.of(context).disabledStateColor,
                                 ),
                                 child: const Text('Stop'),
                               ),

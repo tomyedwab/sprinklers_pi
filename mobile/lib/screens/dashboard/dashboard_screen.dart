@@ -7,6 +7,8 @@ import '../../providers/system_state_provider.dart';
 import '../../widgets/active_zone_card.dart';
 import '../../widgets/upcoming_schedules_card.dart';
 import '../../widgets/weather_card.dart';
+import '../../widgets/skeleton_card.dart';
+import '../../theme/spacing.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -17,10 +19,13 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Timer? _refreshTimer;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
+    // Cancel any existing timer before starting a new one
+    _refreshTimer?.cancel();
     _startRefreshTimer();
   }
 
@@ -31,23 +36,148 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _startRefreshTimer() {
+    // Cancel any existing timer before creating a new one
+    _refreshTimer?.cancel();
     // Refresh every 15 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       _refreshData();
     });
   }
 
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'Retry',
+          textColor: Theme.of(context).colorScheme.onError,
+          onPressed: _refreshData,
+        ),
+      ),
+    );
+  }
+
   Future<void> _refreshData() async {
-    await Future.wait([
-      ref.read(systemStateNotifierProvider.notifier).refresh(),
-      ref.read(zonesNotifierProvider.notifier).refresh(),
-    ]);
+    if (_isRefreshing) return;
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      final systemStateNotifier = ref.read(systemStateNotifierProvider.notifier);
+      final zonesNotifier = ref.read(zonesNotifierProvider.notifier);
+
+      // Refresh system state
+      try {
+        await systemStateNotifier.refresh();
+      } catch (e) {
+        _showError('Failed to refresh system state');
+      }
+
+      // Refresh zones
+      try {
+        await zonesNotifier.refresh();
+      } catch (e) {
+        _showError('Failed to refresh zones');
+      }
+    } catch (e) {
+      // Handle unexpected errors
+      _showError('Failed to refresh dashboard');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isRefreshing = false;
+      });
+    }
+  }
+
+  Widget _buildDashboardContent(bool isWideScreen) {
+    final systemState = ref.watch(systemStateNotifierProvider);
+    final zones = ref.watch(zonesNotifierProvider);
+
+    // Only show loading state if both providers are in their initial loading state
+    final isLoading = systemState.isLoading && !systemState.hasValue ||
+                     zones.isLoading && !zones.hasValue;
+
+    if (isWideScreen) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Main content (60% width)
+          Expanded(
+            flex: 6,
+            child: SingleChildScrollView(
+              padding: Spacing.screenPaddingAll,
+              child: Column(
+                children: [
+                  SkeletonCard(
+                    height: 180,
+                    isLoading: isLoading,
+                    child: const ActiveZoneCard(),
+                  ),
+                  SizedBox(height: Spacing.cardSpacing),
+                  SkeletonCard(
+                    height: 160,
+                    isLoading: isLoading,
+                    child: const WeatherCard(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Side panel (40% width)
+          Expanded(
+            flex: 4,
+            child: SingleChildScrollView(
+              padding: Spacing.screenPaddingAll,
+              child: Column(
+                children: [
+                  SkeletonCard(
+                    height: 240,
+                    isLoading: isLoading,
+                    child: const UpcomingSchedulesCard(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return ListView(
+      padding: Spacing.screenPaddingAll,
+      children: [
+        SkeletonCard(
+          height: 180,
+          isLoading: isLoading,
+          child: const ActiveZoneCard(),
+        ),
+        SizedBox(height: Spacing.cardSpacing),
+        SkeletonCard(
+          height: 240,
+          isLoading: isLoading,
+          child: const UpcomingSchedulesCard(),
+        ),
+        SizedBox(height: Spacing.cardSpacing),
+        SkeletonCard(
+          height: 160,
+          isLoading: isLoading,
+          child: const WeatherCard(),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 600;
+    final isWideScreen = screenWidth > Spacing.wideScreenBreakpoint;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -60,59 +190,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         elevation: 2,
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.refresh,
-              color: Theme.of(context).colorScheme.secondary,
+            icon: Stack(
+              children: [
+                Icon(
+                  Icons.refresh,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                if (_isRefreshing)
+                  Positioned.fill(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            onPressed: _refreshData,
+            onPressed: _isRefreshing ? null : _refreshData,
           ),
         ],
       ),
       body: RefreshIndicator(
         color: Theme.of(context).colorScheme.primary,
         onRefresh: _refreshData,
-        child: isWideScreen
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Main content (60% width)
-                  Expanded(
-                    flex: 6,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: const [
-                          ActiveZoneCard(),
-                          SizedBox(height: 16),
-                          WeatherCard(),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Side panel (40% width)
-                  Expanded(
-                    flex: 4,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: const [
-                          UpcomingSchedulesCard(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: const [
-                  ActiveZoneCard(),
-                  SizedBox(height: 16),
-                  UpcomingSchedulesCard(),
-                  SizedBox(height: 16),
-                  WeatherCard(),
-                ],
-              ),
+        child: _buildDashboardContent(isWideScreen),
       ),
     );
   }

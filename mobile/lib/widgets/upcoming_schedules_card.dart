@@ -6,6 +6,8 @@ import '../models/schedule.dart';
 import '../navigation/navigation_state.dart';
 import '../navigation/app_router.dart';
 import '../navigation/routes.dart';
+import '../theme/spacing.dart';
+import '../theme/app_theme.dart';
 
 class UpcomingSchedulesCard extends ConsumerWidget {
   const UpcomingSchedulesCard({super.key});
@@ -14,21 +16,19 @@ class UpcomingSchedulesCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final schedulesAsync = ref.watch(scheduleListNotifierProvider);
     final systemStateAsync = ref.watch(systemStateNotifierProvider);
+    final appTheme = AppTheme.of(context);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: Spacing.cardPaddingAll,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Schedules',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            Text(
+              'Upcoming Schedules',
+              style: appTheme.cardTitleStyle,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: Spacing.contentSpacing),
             systemStateAsync.when(
               loading: () => const Center(
                 child: SizedBox(
@@ -37,8 +37,8 @@ class UpcomingSchedulesCard extends ConsumerWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
-              error: (_, __) => const Center(
-                child: Icon(Icons.error, color: Colors.red, size: 24),
+              error: (_, __) => Center(
+                child: Icon(Icons.error, color: appTheme.disabledStateColor, size: 24),
               ),
               data: (state) => Center(
                 child: Column(
@@ -50,7 +50,7 @@ class UpcomingSchedulesCard extends ConsumerWidget {
                           state.isRunning ? 'System Enabled' : 'System Disabled',
                           style: TextStyle(
                             fontSize: 16,
-                            color: state.isRunning ? Colors.green : Colors.red,
+                            color: state.isRunning ? appTheme.enabledStateColor : appTheme.disabledStateColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -68,9 +68,7 @@ class UpcomingSchedulesCard extends ConsumerWidget {
                       state.isRunning 
                         ? 'Schedules and manual watering are enabled'
                         : 'Scheduled watering is disabled; manual control only',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      style: appTheme.statusTextStyle,
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -89,21 +87,21 @@ class UpcomingSchedulesCard extends ConsumerWidget {
               ),
               error: (error, stackTrace) => Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   child: Text(
                     'Error loading schedules: $error',
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: appTheme.disabledStateColor),
                   ),
                 ),
               ),
               data: (schedules) {
                 if (schedules.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
                       child: Text(
                         'No upcoming schedules',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: appTheme.inactiveZoneColor),
                       ),
                     ),
                   );
@@ -115,12 +113,12 @@ class UpcomingSchedulesCard extends ConsumerWidget {
                     .toList();
 
                 if (upcomingSchedules.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
                       child: Text(
                         'No upcoming schedules',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: appTheme.inactiveZoneColor),
                       ),
                     ),
                   );
@@ -135,7 +133,7 @@ class UpcomingSchedulesCard extends ConsumerWidget {
                       separatorBuilder: (context, index) => const Divider(),
                       itemBuilder: (context, index) {
                         final schedule = upcomingSchedules[index];
-                        return _buildScheduleItem(schedule);
+                        return _buildScheduleItem(context, schedule);
                       },
                     ),
                     if (schedules.length > upcomingSchedules.length) ...[
@@ -160,33 +158,29 @@ class UpcomingSchedulesCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildScheduleItem(ScheduleListItem schedule) {
+  Widget _buildScheduleItem(BuildContext context, ScheduleListItem schedule) {
+    final appTheme = AppTheme.of(context);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.schedule,
             size: 24,
-            color: Colors.blue,
+            color: appTheme.scheduleIconColor,
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               schedule.name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: appTheme.valueTextStyle,
             ),
           ),
           if (schedule.nextRun != null)
             Text(
               schedule.nextRun!,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: appTheme.subtitleTextStyle,
             ),
         ],
       ),

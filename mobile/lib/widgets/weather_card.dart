@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/weather_provider.dart';
 import '../models/weather.dart';
+import '../theme/spacing.dart';
+import '../theme/app_theme.dart';
 
 class WeatherCard extends ConsumerWidget {
   const WeatherCard({super.key});
@@ -12,7 +14,7 @@ class WeatherCard extends ConsumerWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: Spacing.cardPaddingAll,
         child: weatherAsync.when(
           data: (weather) => _WeatherContent(weather: weather),
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -34,7 +36,7 @@ class _WeatherContent extends StatelessWidget {
       return const _WeatherNotConfigured();
     }
 
-    final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
     final isRaining = weather.precipitation > 0 || weather.precipitationToday > 0;
     final isDaytime = DateTime.now().hour >= 6 && DateTime.now().hour < 20;
     
@@ -44,23 +46,20 @@ class _WeatherContent extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Weather',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: appTheme.cardTitleStyle,
             ),
             Icon(
               isDaytime 
                 ? (isRaining ? Icons.water : Icons.wb_sunny)
                 : (isRaining ? Icons.water_drop : Icons.nightlight),
-              color: theme.colorScheme.primary,
+              color: appTheme.weatherIconColor,
               size: 24,
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: Spacing.contentSpacing),
         Row(
           children: [
             Expanded(
@@ -79,7 +78,7 @@ class _WeatherContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: Spacing.contentSpacing),
         Row(
           children: [
             Expanded(
@@ -100,16 +99,16 @@ class _WeatherContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: Spacing.contentSpacing),
         _WeatherTile(
           icon: Icons.wb_sunny,
           label: 'UV Index',
           value: (weather.uvIndex / 10).toStringAsFixed(1),
           subtitle: _getUVDescription(weather.uvIndex / 10),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: Spacing.contentSpacing),
         const Divider(),
-        const SizedBox(height: 8),
+        SizedBox(height: Spacing.contentSpacing),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -119,14 +118,12 @@ class _WeatherContent extends StatelessWidget {
                 children: [
                   Text(
                     'Watering Adjustment',
-                    style: theme.textTheme.titleSmall,
+                    style: appTheme.cardTitleStyle,
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: Spacing.contentSpacing),
                   Text(
                     'Based on current conditions, watering times will be ${weather.scale < 100 ? 'reduced' : (weather.scale > 100 ? 'increased' : 'unchanged')}.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    style: appTheme.statusTextStyle,
                   ),
                 ],
               ),
@@ -134,13 +131,13 @@ class _WeatherContent extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondary,
+                color: appTheme.weatherIconColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
                 '${weather.scale}%',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.surface,
+                style: appTheme.valueTextStyle.copyWith(
+                  color: Theme.of(context).colorScheme.surface,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -148,15 +145,12 @@ class _WeatherContent extends StatelessWidget {
           ],
         ),
         if (weather.scale != 100) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: Spacing.contentSpacing),
           Text(
             weather.scale < 100
               ? 'Recent rainfall and humidity levels have reduced the need for watering.'
               : 'Hot and dry conditions have increased the need for watering.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.secondary,
-              fontStyle: FontStyle.italic,
-            ),
+            style: appTheme.subtitleTextStyle,
           ),
         ],
       ],
@@ -187,30 +181,20 @@ class _WeatherTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
     
     return Row(
       children: [
-        Icon(icon, size: 24, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
+        Icon(icon, size: 24, color: appTheme.weatherIconColor),
+        SizedBox(width: Spacing.contentSpacing),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: theme.textTheme.bodyMedium),
-              Text(
-                value, 
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
+              Text(label, style: appTheme.statusTextStyle),
+              Text(value, style: appTheme.valueTextStyle),
               if (subtitle != null)
-                Text(
-                  subtitle!, 
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.secondary,
-                  ),
-                ),
+                Text(subtitle!, style: appTheme.subtitleTextStyle),
             ],
           ),
         ),
@@ -226,14 +210,14 @@ class _WeatherError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
     
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Failed to load weather data'),
-          const SizedBox(height: 8),
+          Text('Failed to load weather data', style: appTheme.statusTextStyle),
+          SizedBox(height: Spacing.contentSpacing),
           ElevatedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
@@ -250,7 +234,7 @@ class _WeatherNotConfigured extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
     
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -258,20 +242,18 @@ class _WeatherNotConfigured extends StatelessWidget {
         Icon(
           Icons.cloud_off,
           size: 48,
-          color: theme.colorScheme.error,
+          color: appTheme.disabledStateColor,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: Spacing.contentSpacing),
         Text(
           'Weather Provider Not Configured',
-          style: theme.textTheme.titleMedium,
+          style: appTheme.cardTitleStyle,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: Spacing.contentSpacing),
         Text(
           'Configure weather settings to enable automatic adjustments',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: appTheme.statusTextStyle,
           textAlign: TextAlign.center,
         ),
       ],
