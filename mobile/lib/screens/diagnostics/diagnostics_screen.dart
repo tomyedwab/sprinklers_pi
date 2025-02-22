@@ -4,6 +4,8 @@ import 'widgets/log_viewer.dart';
 import 'widgets/weather_diagnostics.dart';
 import 'widgets/system_maintenance.dart';
 import 'widgets/chatter_box.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/spacing.dart';
 
 class DiagnosticsScreen extends ConsumerStatefulWidget {
   const DiagnosticsScreen({super.key});
@@ -14,22 +16,38 @@ class DiagnosticsScreen extends ConsumerStatefulWidget {
 
 class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  static const _tabCount = 4;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _initializeTabController();
+  }
+
+  void _initializeTabController() {
+    try {
+      _tabController = TabController(length: _tabCount, vsync: this);
+    } catch (e) {
+      debugPrint('Error initializing tab controller: $e');
+      // Re-throw to let the error boundary handle it
+      throw Exception('Failed to initialize diagnostics screen: $e');
+    }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    try {
+      _tabController.dispose();
+    } catch (e) {
+      debugPrint('Error disposing tab controller: $e');
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
     
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
@@ -37,14 +55,16 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> with Sing
         backgroundColor: theme.colorScheme.surface,
         title: Text(
           'Diagnostics',
-          style: theme.textTheme.titleLarge,
+          style: appTheme.cardTitleStyle,
         ),
         elevation: 2,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: theme.colorScheme.secondary,
-          unselectedLabelColor: theme.colorScheme.secondary.withOpacity(0.7),
+          labelColor: theme.colorScheme.primary,
+          unselectedLabelColor: appTheme.mutedTextColor,
           indicatorColor: theme.colorScheme.primary,
+          labelStyle: appTheme.valueTextStyle,
+          unselectedLabelStyle: appTheme.subtitleTextStyle,
           tabs: const [
             Tab(
               icon: Icon(Icons.list_alt),

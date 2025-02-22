@@ -5,6 +5,8 @@ import '../../../api/api_client.dart';
 import '../../../widgets/standard_error_widget.dart';
 import '../../../widgets/loading_states.dart';
 import '../../../widgets/confirmation_dialogs.dart';
+import '../../../theme/app_theme.dart';
+import '../../../theme/spacing.dart';
 
 class SystemMaintenance extends ConsumerWidget {
   const SystemMaintenance({super.key});
@@ -12,39 +14,38 @@ class SystemMaintenance extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final systemState = ref.watch(systemStateNotifierProvider);
+    final appTheme = AppTheme.of(context);
 
     return RefreshIndicator(
       onRefresh: () => ref.read(systemStateNotifierProvider.notifier).refresh(),
       child: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: Spacing.screenPaddingAll,
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: Spacing.cardPaddingAll,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'System Information',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: appTheme.cardTitleStyle,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: Spacing.md),
                   systemState.when(
                     data: (state) => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildInfoRow('Version', state.version),
-                        _buildInfoRow('Status', state.isRunning ? 'Running' : 'Stopped'),
-                        _buildInfoRow('Enabled Zones', state.enabledZonesCount.toString()),
-                        _buildInfoRow('Schedules', state.schedulesCount.toString()),
-                        _buildInfoRow('Events', state.eventsCount.toString()),
+                        _buildInfoRow(context, 'Version', state.version),
+                        _buildInfoRow(context, 'Status', state.isRunning ? 'Running' : 'Stopped'),
+                        _buildInfoRow(context, 'Enabled Zones', state.enabledZonesCount.toString()),
+                        _buildInfoRow(context, 'Schedules', state.schedulesCount.toString()),
+                        _buildInfoRow(context, 'Events', state.eventsCount.toString()),
                         if (state.activeZoneName != null) ...[
-                          _buildInfoRow('Active Zone', state.activeZoneName!),
+                          _buildInfoRow(context, 'Active Zone', state.activeZoneName!),
                           if (state.remainingTime != null)
                             _buildInfoRow(
+                              context,
                               'Remaining Time',
                               state.remainingTime!.inSeconds == 99999
                                   ? 'Manual Mode'
@@ -70,25 +71,25 @@ class SystemMaintenance extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: Spacing.md),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: Spacing.cardPaddingAll,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'System Maintenance',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: appTheme.cardTitleStyle,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: Spacing.md),
                   ListTile(
-                    leading: const Icon(Icons.refresh),
-                    title: const Text('Reset System'),
-                    subtitle: const Text('Restart all system services'),
+                    leading: Icon(Icons.refresh, color: appTheme.scheduleIconColor),
+                    title: Text('Reset System', style: appTheme.valueTextStyle),
+                    subtitle: Text(
+                      'Restart all system services',
+                      style: appTheme.subtitleTextStyle,
+                    ),
                     onTap: () {
                       showDialog(
                         context: context,
@@ -145,10 +146,11 @@ class SystemMaintenance extends ConsumerWidget {
                   ),
                   const Divider(),
                   ListTile(
-                    leading: const Icon(Icons.restore),
-                    title: const Text('Factory Reset'),
-                    subtitle: const Text(
+                    leading: Icon(Icons.restore, color: appTheme.disabledStateColor),
+                    title: Text('Factory Reset', style: appTheme.valueTextStyle),
+                    subtitle: Text(
                       'Reset all settings to factory defaults',
+                      style: appTheme.subtitleTextStyle,
                     ),
                     onTap: () {
                       showDialog(
@@ -219,19 +221,21 @@ class SystemMaintenance extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    final appTheme = AppTheme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: EdgeInsets.symmetric(vertical: Spacing.unit),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
+            style: appTheme.valueTextStyle,
           ),
-          Text(value),
+          Text(
+            value,
+            style: appTheme.subtitleTextStyle,
+          ),
         ],
       ),
     );

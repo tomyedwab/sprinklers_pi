@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/weather_provider.dart';
 import '../../../widgets/standard_error_widget.dart';
 import '../../../widgets/loading_states.dart';
+import '../../../theme/app_theme.dart';
+import '../../../theme/spacing.dart';
 
 class WeatherDiagnostics extends ConsumerWidget {
   const WeatherDiagnostics({super.key});
@@ -10,26 +12,24 @@ class WeatherDiagnostics extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weatherData = ref.watch(weatherNotifierProvider);
+    final appTheme = AppTheme.of(context);
 
     return RefreshIndicator(
       onRefresh: () => ref.read(weatherNotifierProvider.notifier).refresh(),
       child: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: Spacing.screenPaddingAll,
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: Spacing.cardPaddingAll,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Weather Provider',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: appTheme.cardTitleStyle,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: Spacing.md),
                   weatherData.when(
                     data: (data) {
                       if (data.noProvider) {
@@ -70,35 +70,27 @@ class WeatherDiagnostics extends ConsumerWidget {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Status: Connected'),
-                          const SizedBox(height: 8),
-                          Text('Provider IP: ${data.resolvedIP}'),
-                          const SizedBox(height: 16),
-                          Text('Overall Scale: ${data.scale}%'),
+                          _buildInfoRow(context, 'Status', 'Connected'),
+                          _buildInfoRow(context, 'Provider IP', data.resolvedIP ?? 'Unknown'),
+                          _buildInfoRow(context, 'Overall Scale', '${data.scale}%'),
                           const Divider(),
-                          const Text(
+                          Text(
                             "Yesterday's Values",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: appTheme.cardTitleStyle,
                           ),
-                          const SizedBox(height: 8),
-                          Text('Mean Temperature: ${data.meanTemperature}°F'),
-                          Text('Humidity: ${data.minHumidity}% - ${data.maxHumidity}%'),
-                          Text('Precipitation: ${data.precipitation} inches'),
-                          Text('Wind: ${data.windSpeed} mph'),
+                          SizedBox(height: Spacing.xs),
+                          _buildInfoRow(context, 'Mean Temperature', '${data.meanTemperature}°F'),
+                          _buildInfoRow(context, 'Humidity', '${data.minHumidity}% - ${data.maxHumidity}%'),
+                          _buildInfoRow(context, 'Precipitation', '${data.precipitation} inches'),
+                          _buildInfoRow(context, 'Wind', '${data.windSpeed} mph'),
                           const Divider(),
-                          const Text(
+                          Text(
                             "Today's Values",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: appTheme.cardTitleStyle,
                           ),
-                          const SizedBox(height: 8),
-                          Text('Precipitation: ${data.precipitationToday} inches'),
-                          Text('UV Index: ${data.uvIndex}'),
+                          SizedBox(height: Spacing.xs),
+                          _buildInfoRow(context, 'Precipitation', '${data.precipitationToday} inches'),
+                          _buildInfoRow(context, 'UV Index', data.uvIndex.toString()),
                         ],
                       );
                     },
@@ -118,6 +110,26 @@ class WeatherDiagnostics extends ConsumerWidget {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    final appTheme = AppTheme.of(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: Spacing.unit),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: appTheme.subtitleTextStyle,
+          ),
+          Text(
+            value,
+            style: appTheme.valueTextStyle,
           ),
         ],
       ),

@@ -9,6 +9,8 @@ import '../../../models/log.dart';
 import '../../../api/models/zone.dart';
 import '../../../widgets/standard_error_widget.dart';
 import '../../../widgets/loading_states.dart';
+import '../../../theme/app_theme.dart';
+import '../../../theme/spacing.dart';
 
 enum ViewType {
   graph,
@@ -46,6 +48,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
   @override
   Widget build(BuildContext context) {
     final zones = ref.watch(zonesNotifierProvider);
+    final appTheme = AppTheme.of(context);
     
     // Watch the providers without triggering fetches in the select
     final logs = _viewType == ViewType.graph
@@ -57,9 +60,9 @@ class _LogViewerState extends ConsumerState<LogViewer> {
     return Column(
       children: [
         Card(
-          margin: const EdgeInsets.all(8.0),
+          margin: EdgeInsets.all(Spacing.xs),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: Spacing.cardPaddingAll,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -98,7 +101,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                         if (states.contains(MaterialState.selected)) {
                           return Theme.of(context).colorScheme.surface;
                         }
-                        return Theme.of(context).colorScheme.onSurface;
+                        return appTheme.mutedTextColor;
                       },
                     ),
                     iconColor: MaterialStateProperty.resolveWith<Color?>(
@@ -106,12 +109,12 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                         if (states.contains(MaterialState.selected)) {
                           return Theme.of(context).colorScheme.surface;
                         }
-                        return Theme.of(context).colorScheme.onSurface;
+                        return appTheme.mutedTextColor;
                       },
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: Spacing.md),
                 // Date range selection
                 Row(
                   children: [
@@ -162,7 +165,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                   ],
                 ),
                 if (_viewType == ViewType.graph) ...[
-                  const SizedBox(height: 16),
+                  SizedBox(height: Spacing.md),
                   // Grouping options for graph view
                   SegmentedButton<api.LogGrouping>(
                     segments: const [
@@ -200,7 +203,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                           if (states.contains(MaterialState.selected)) {
                             return Theme.of(context).colorScheme.surface;
                           }
-                          return Theme.of(context).colorScheme.onSurface;
+                          return appTheme.mutedTextColor;
                         },
                       ),
                       iconColor: MaterialStateProperty.resolveWith<Color?>(
@@ -208,17 +211,17 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                           if (states.contains(MaterialState.selected)) {
                             return Theme.of(context).colorScheme.surface;
                           }
-                          return Theme.of(context).colorScheme.onSurface;
+                          return appTheme.mutedTextColor;
                         },
                       ),
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
+                SizedBox(height: Spacing.md),
                 // Zone filters
                 zones.when(
                   data: (zones) => _buildZoneFilter(zones),
-                  loading: () => const SizedBox(height: 52),  // Match filter height
+                  loading: () => SizedBox(height: Spacing.xl),  // Match filter height
                   error: (_, __) => StandardErrorWidget(
                     message: 'Failed to load zones',
                     type: ErrorType.network,
@@ -237,30 +240,69 @@ class _LogViewerState extends ConsumerState<LogViewer> {
             },
             child: logs.when(
               data: (data) {
+                if (data == null || (data is List && data.isEmpty) || (data is Map && data.isEmpty)) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: Spacing.xxl,
+                          color: appTheme.mutedTextColor,
+                        ),
+                        SizedBox(height: Spacing.md),
+                        Text(
+                          'No logs found for the selected period',
+                          style: appTheme.cardTitleStyle,
+                        ),
+                        SizedBox(height: Spacing.xs),
+                        TextButton.icon(
+                          onPressed: _loadData,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Refresh'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
                 if (_viewType == ViewType.table) {
                   return _buildTableView(data as List<ZoneLog>);
                 } else {
                   return _buildGraphView(data as Map<int, List<GraphPoint>>);
                 }
               },
-              loading: () => ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: 5,
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: SkeletonCard(
-                    height: 60,
-                    showHeader: false,
-                    contentLines: 2,
-                  ),
+              loading: () => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    SizedBox(height: Spacing.md),
+                    Text(
+                      'Loading logs...',
+                      style: appTheme.valueTextStyle,
+                    ),
+                  ],
                 ),
               ),
-              error: (error, stackTrace) => Center(
+              error: (error, stack) => Center(
                 child: StandardErrorWidget(
-                  message: 'Failed to load logs: $error',
+                  message: error is LogFetchException 
+                    ? error.message 
+                    : 'Failed to load logs',
                   type: ErrorType.network,
                   showRetry: true,
-                  onPrimaryAction: () => _loadData(),
+                  primaryActionText: 'Try Again',
+                  secondaryActionText: 'Reset Filters',
+                  onPrimaryAction: _loadData,
+                  onSecondaryAction: () {
+                    setState(() {
+                      _startDate = DateTime.now().subtract(const Duration(days: 1));
+                      _endDate = DateTime.now();
+                      _selectedZones = {};
+                    });
+                    _loadData();
+                  },
                 ),
               ),
             ),
@@ -271,27 +313,41 @@ class _LogViewerState extends ConsumerState<LogViewer> {
   }
 
   Future<void> _loadData() async {
-    if (_viewType == ViewType.graph) {
-      await ref.read(logNotifierProvider.notifier).fetchDateRange(
-        startDate: _startDate,
-        endDate: _endDate,
-        grouping: _grouping,
-      );
-    } else {
-      await ref.read(tableLogNotifierProvider.notifier).fetchDateRange(
-        startDate: _startDate,
-        endDate: _endDate,
-      );
+    try {
+      if (_viewType == ViewType.graph) {
+        await ref.read(logNotifierProvider.notifier).fetchDateRange(
+          startDate: _startDate,
+          endDate: _endDate,
+          grouping: _grouping,
+        );
+      } else {
+        await ref.read(tableLogNotifierProvider.notifier).fetchDateRange(
+          startDate: _startDate,
+          endDate: _endDate,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load logs: ${e.toString()}'),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _loadData,
+            ),
+          ),
+        );
+      }
     }
   }
 
   Widget _buildTableView(List<ZoneLog> logs) {
     final zonesAsync = ref.watch(zonesNotifierProvider);
     final dateFormat = DateFormat('MMM d, y h:mm a');
+    final appTheme = AppTheme.of(context);
 
     return zonesAsync.when(
       data: (zones) {
-        // Filter logs based on selected zones
         final filteredLogs = _selectedZones.isEmpty 
           ? logs 
           : logs.where((log) => _selectedZones.contains(log.zoneId - 1)).toList();
@@ -315,12 +371,12 @@ class _LogViewerState extends ConsumerState<LogViewer> {
             if (entries.isEmpty) return const SizedBox.shrink();
 
             return Card(
-              margin: const EdgeInsets.all(8.0),
+              margin: EdgeInsets.all(Spacing.xs),
               child: ExpansionTile(
-                title: Text(zoneName),
-                subtitle: Text('${entries.length} entries'),
-                shape: const Border(),  // Remove default border
-                maintainState: true,  // Keep state when collapsed
+                title: Text(zoneName, style: appTheme.cardTitleStyle),
+                subtitle: Text('${entries.length} entries', style: appTheme.subtitleTextStyle),
+                shape: const Border(),
+                maintainState: true,
                 children: entries.map((entry) {
                   final scheduleText = entry.isManual
                       ? 'Manual'
@@ -329,9 +385,11 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                           : 'Schedule ${entry.scheduleId}';
 
                   return ListTile(
-                    title: Text(dateFormat.format(entry.date.toLocal())),
+                    title: Text(dateFormat.format(entry.date.toLocal()), 
+                      style: appTheme.valueTextStyle),
                     subtitle: Text(
                       'Duration: ${entry.duration.inMinutes}:${(entry.duration.inSeconds % 60).toString().padLeft(2, '0')} • $scheduleText',
+                      style: appTheme.subtitleTextStyle,
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -341,7 +399,7 @@ class _LogViewerState extends ConsumerState<LogViewer> {
                           entry.seasonalAdjustment,
                           tooltip: 'Seasonal adjustment factor',
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: Spacing.unit),
                         _buildAdjustmentChip(
                           'Weather: ${entry.weatherAdjustment}%',
                           entry.weatherAdjustment,
@@ -357,28 +415,32 @@ class _LogViewerState extends ConsumerState<LogViewer> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(
-        child: Text('Error: $error'),
+      error: (error, stackTrace) => StandardErrorWidget(
+        message: 'Error: $error',
+        type: ErrorType.network,
+        showRetry: true,
+        onPrimaryAction: _loadData,
       ),
     );
   }
 
   Widget _buildAdjustmentChip(String label, int adjustment, {String? tooltip}) {
+    final appTheme = AppTheme.of(context);
     Color? color;
     if (adjustment != 100 && adjustment != -1) {
-      color = adjustment < 100 ? Colors.red[100] : Colors.green[100];
+      color = adjustment < 100 ? appTheme.disabledStateColor : appTheme.enabledStateColor;
     }
 
     final chip = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: Spacing.xs, vertical: Spacing.unit),
       decoration: BoxDecoration(
-        color: adjustment == -1 ? Colors.grey[100] : color,
-        borderRadius: BorderRadius.circular(12),
+        color: adjustment == -1 ? appTheme.mutedTextColor.withOpacity(0.1) : color?.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(Spacing.xs),
       ),
       child: Text(
         adjustment == -1 ? 'N/A' : label,
-        style: TextStyle(
-          color: adjustment == -1 ? Colors.grey[600] : null,
+        style: appTheme.subtitleTextStyle.copyWith(
+          color: adjustment == -1 ? appTheme.mutedTextColor : null,
         ),
       ),
     );

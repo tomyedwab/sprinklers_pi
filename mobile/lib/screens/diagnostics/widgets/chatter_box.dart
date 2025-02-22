@@ -4,6 +4,8 @@ import '../../../providers/zone_provider.dart';
 import '../../../api/api_client.dart';
 import '../../../widgets/standard_error_widget.dart';
 import '../../../widgets/loading_states.dart';
+import '../../../theme/app_theme.dart';
+import '../../../theme/spacing.dart';
 
 class ChatterBox extends ConsumerStatefulWidget {
   const ChatterBox({super.key});
@@ -19,33 +21,30 @@ class _ChatterBoxState extends ConsumerState<ChatterBox> {
   @override
   Widget build(BuildContext context) {
     final zonesAsync = ref.watch(zonesNotifierProvider);
+    final appTheme = AppTheme.of(context);
+    final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: Spacing.screenPaddingAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: Spacing.cardPaddingAll,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Chatter Box',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: appTheme.cardTitleStyle,
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: Spacing.xs),
+                  Text(
                     'Send a test message to a zone to verify communication.',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
+                    style: appTheme.subtitleTextStyle,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: Spacing.md),
                   zonesAsync.when(
                     loading: () => const SkeletonCard(height: 56),
                     error: (error, stack) => StandardErrorWidget(
@@ -67,20 +66,31 @@ class _ChatterBoxState extends ConsumerState<ChatterBox> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           DropdownButtonFormField<String>(
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Select Zone',
-                              border: OutlineInputBorder(),
+                              labelStyle: appTheme.subtitleTextStyle,
+                              border: const OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: Spacing.md,
+                                vertical: Spacing.sm,
+                              ),
                             ),
                             value: _selectedZone,
                             items: [
-                              const DropdownMenuItem(
+                              DropdownMenuItem(
                                 value: null,
-                                child: Text('Select a zone'),
+                                child: Text(
+                                  'Select a zone',
+                                  style: appTheme.subtitleTextStyle,
+                                ),
                               ),
                               ...enabledZones.map(
                                 (zone) => DropdownMenuItem(
                                   value: zone.id.toString(),
-                                  child: Text('${zone.id + 1}: ${zone.name}'),
+                                  child: Text(
+                                    '${zone.id + 1}: ${zone.name}',
+                                    style: appTheme.valueTextStyle,
+                                  ),
                                 ),
                               ),
                             ],
@@ -90,7 +100,7 @@ class _ChatterBoxState extends ConsumerState<ChatterBox> {
                               });
                             },
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: Spacing.md),
                           FilledButton.icon(
                             onPressed: (_selectedZone == null || _isSending)
                                 ? null
@@ -104,9 +114,14 @@ class _ChatterBoxState extends ConsumerState<ChatterBox> {
                                       );
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Message sent successfully'),
-                                            backgroundColor: Colors.green,
+                                          SnackBar(
+                                            content: Text(
+                                              'Message sent successfully',
+                                              style: appTheme.valueTextStyle.copyWith(
+                                                color: theme.colorScheme.onPrimary,
+                                              ),
+                                            ),
+                                            backgroundColor: appTheme.enabledStateColor,
                                           ),
                                         );
                                       }
@@ -139,16 +154,24 @@ class _ChatterBoxState extends ConsumerState<ChatterBox> {
                                     }
                                   },
                             icon: _isSending
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
+                                ? SizedBox(
+                                    width: Spacing.md,
+                                    height: Spacing.md,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: theme.colorScheme.onPrimary,
                                     ),
                                   )
-                                : const Icon(Icons.send),
-                            label: Text(_isSending ? 'Sending...' : 'Send Message'),
+                                : Icon(
+                                    Icons.send,
+                                    color: theme.colorScheme.onPrimary,
+                                  ),
+                            label: Text(
+                              _isSending ? 'Sending...' : 'Send Message',
+                              style: appTheme.valueTextStyle.copyWith(
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            ),
                           ),
                         ],
                       );
@@ -158,26 +181,23 @@ class _ChatterBoxState extends ConsumerState<ChatterBox> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          const Card(
+          SizedBox(height: Spacing.md),
+          Card(
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: Spacing.cardPaddingAll,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Usage',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: appTheme.cardTitleStyle,
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: Spacing.md),
                   Text(
                     '1. Select a zone to test\n'
                     '2. Click "Send Message" to send a test message\n'
                     '3. Check system response in logs',
-                    style: TextStyle(height: 1.5),
+                    style: appTheme.valueTextStyle.copyWith(height: 1.5),
                   ),
                 ],
               ),
