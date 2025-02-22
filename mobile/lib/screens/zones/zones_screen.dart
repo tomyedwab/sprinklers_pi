@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/zone_provider.dart';
 import '../../api/models/zone.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/spacing.dart';
 import 'widgets/zone_card.dart';
 
 class ZonesScreen extends ConsumerWidget {
@@ -11,6 +13,7 @@ class ZonesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final zonesAsync = ref.watch(zonesNotifierProvider);
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
@@ -18,14 +21,14 @@ class ZonesScreen extends ConsumerWidget {
         backgroundColor: theme.colorScheme.surface,
         title: Text(
           'Zones',
-          style: theme.textTheme.titleLarge,
+          style: appTheme.cardTitleStyle,
         ),
         elevation: 2,
         actions: [
           IconButton(
             icon: Icon(
               Icons.refresh,
-              color: theme.colorScheme.secondary,
+              color: appTheme.scheduleIconColor,
             ),
             onPressed: () => ref.refresh(zonesNotifierProvider),
           ),
@@ -35,7 +38,7 @@ class ZonesScreen extends ConsumerWidget {
         data: (zones) => _ZonesList(zones: zones),
         loading: () => Center(
           child: CircularProgressIndicator(
-            color: theme.colorScheme.primary,
+            color: appTheme.activeZoneColor,
           ),
         ),
         error: (error, stack) => Center(
@@ -44,11 +47,11 @@ class ZonesScreen extends ConsumerWidget {
             children: [
               Text(
                 'Failed to load zones',
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: appTheme.statusTextStyle.copyWith(
                   color: theme.colorScheme.error,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: Spacing.md),
               ElevatedButton(
                 onPressed: () => ref.refresh(zonesNotifierProvider),
                 style: ElevatedButton.styleFrom(
@@ -73,6 +76,7 @@ class _ZonesList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
 
     if (zones.isEmpty) {
       return Center(
@@ -82,20 +86,18 @@ class _ZonesList extends ConsumerWidget {
             Icon(
               Icons.water_drop_outlined,
               size: 64,
-              color: theme.colorScheme.primary.withOpacity(0.5),
+              color: appTheme.inactiveZoneColor,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: Spacing.md),
             Text(
               'No zones configured',
-              style: theme.textTheme.titleLarge,
+              style: appTheme.cardTitleStyle,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: Spacing.xs),
             Text(
               'Add zones to start controlling your sprinklers',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-              ),
+              style: appTheme.subtitleTextStyle,
               textAlign: TextAlign.center,
             ),
           ],
@@ -104,25 +106,19 @@ class _ZonesList extends ConsumerWidget {
     }
 
     return RefreshIndicator(
-      color: theme.colorScheme.primary,
+      color: appTheme.activeZoneColor,
       onRefresh: () => ref.refresh(zonesNotifierProvider.future),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: Spacing.screenPaddingAll,
         itemCount: zones.length,
         itemBuilder: (context, index) {
           final zone = zones[index];
           return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: EdgeInsets.only(bottom: Spacing.md),
             child: ZoneCard(
               zone: zone,
-              onToggle: (enabled) {
-                ref.read(zonesNotifierProvider.notifier)
-                    .toggleZone(zone.id, enabled);
-              },
-              onEdit: () {
-                // TODO: Navigate to zone edit screen
-                // This will be implemented in a separate task
-              },
+              onToggle: (enabled) => ref.read(zonesNotifierProvider.notifier)
+                  .toggleZone(zone.id, enabled),
             ),
           );
         },

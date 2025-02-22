@@ -4,6 +4,8 @@ import '../../../api/models/zone.dart';
 import '../../../providers/zone_provider.dart';
 import '../../../widgets/standard_error_widget.dart';
 import '../../../widgets/confirmation_dialogs.dart';
+import '../../../theme/app_theme.dart';
+import '../../../theme/spacing.dart';
 
 class ZoneEditModal extends ConsumerStatefulWidget {
   final Zone zone;
@@ -109,6 +111,7 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
     final mediaQuery = MediaQuery.of(context);
 
     return Dialog(
@@ -118,7 +121,7 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
           maxHeight: mediaQuery.size.height * 0.9,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(Spacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -127,27 +130,36 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
                 children: [
                   Text(
                     'Edit Zone ${widget.zone.id}',
-                    style: theme.textTheme.titleLarge,
+                    style: appTheme.cardTitleStyle,
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: Icon(
+                      Icons.close,
+                      color: appTheme.mutedTextColor,
+                    ),
                     onPressed: _confirmClose,
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: Spacing.lg),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                style: appTheme.valueTextStyle,
+                decoration: InputDecoration(
                   labelText: 'Zone Name',
                   helperText: 'Maximum 19 characters',
+                  helperStyle: appTheme.subtitleTextStyle,
+                  labelStyle: appTheme.subtitleTextStyle,
                 ),
                 maxLength: 19,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: Spacing.md),
               SwitchListTile(
-                title: const Text('Enabled'),
+                title: Text(
+                  'Enabled',
+                  style: appTheme.valueTextStyle,
+                ),
                 value: _isEnabled,
                 onChanged: (value) {
                   setState(() => _isEnabled = value);
@@ -155,9 +167,13 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
                 },
               ),
               SwitchListTile(
-                title: const Text('Pump Associated'),
-                subtitle: const Text(
+                title: Text(
+                  'Pump Associated',
+                  style: appTheme.valueTextStyle,
+                ),
+                subtitle: Text(
                   'When enabled, the pump will automatically turn on when this zone is active. Use this for zones that require additional water pressure.',
+                  style: appTheme.subtitleTextStyle,
                 ),
                 value: _isPumpAssociated,
                 onChanged: (value) {
@@ -165,18 +181,26 @@ class _ZoneEditModalState extends ConsumerState<ZoneEditModal> {
                   _checkForChanges();
                 },
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: Spacing.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: _confirmClose,
-                    child: const Text('Cancel'),
+                    child: Text(
+                      'Cancel',
+                      style: appTheme.valueTextStyle,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: Spacing.xs),
                   FilledButton(
                     onPressed: _hasChanges ? _saveChanges : null,
-                    child: const Text('Save'),
+                    child: Text(
+                      'Save',
+                      style: appTheme.valueTextStyle.copyWith(
+                        color: theme.colorScheme.surface,
+                      ),
+                    ),
                   ),
                 ],
               ),

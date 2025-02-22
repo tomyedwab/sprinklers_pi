@@ -1,44 +1,5 @@
 # Mobile App Bug Tracker
 
-## Zones Screen Issues
-
-### Critical Issues
-
-1. **Potential State Management Race Condition**
-   - The `onToggle` callback in `ZoneCard` directly calls `toggleZone` without waiting for the result
-   - No error handling for failed toggle operations
-   - Could lead to UI state being out of sync with actual zone state
-   - Should show loading state during toggle and handle errors
-
-### Moderate Issues
-
-3. **Inefficient List Updates**
-   - The entire list rebuilds when a single zone is toggled
-   - Should use `ListView.builder` with individual zone state management
-   - Consider using `ConsumerWidget` for individual `ZoneCard` widgets
-
-4. **Incomplete Navigation Implementation**
-   - Zone edit functionality is marked with TODO and not implemented
-   - Missing navigation logic could lead to confusing user experience
-   - Should either implement edit functionality or hide edit option
-
-5. **Inconsistent Theme Usage**
-   - Direct use of `theme.colorScheme` throughout the code
-   - Some color values are hardcoded with opacity
-   - Should extract common theme values to a theme extension
-
-### Minor Issues
-
-6. **Redundant Padding**
-   - Both `ListView.builder` and `ZoneCard` have padding
-   - Could cause unintended spacing issues
-   - Should consolidate padding strategy
-
-7. **Missing Loading Skeleton**
-   - Uses basic `CircularProgressIndicator` for loading state
-   - No indication of content structure while loading
-   - Should implement skeleton loading UI for better UX
-
 ## Schedules Screen Issues
 
 ### Critical Issues

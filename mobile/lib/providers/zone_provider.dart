@@ -21,16 +21,27 @@ class ZonesNotifier extends _$ZonesNotifier {
   }
 
   Future<void> toggleZone(int zoneId, bool enable) async {
-    final apiClient = ref.read(apiClientProvider);
-    await apiClient.toggleZone(zoneId, enable);
-    // Refresh the zones list
-    await refresh();
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      await apiClient.toggleZone(zoneId, enable);
+      // Refresh the zones list
+      await refresh();
+    } catch (e, stack) {
+      // Let the error propagate to the UI for handling
+      state = AsyncValue.error(e, stack);
+      throw e; // Re-throw to let the UI handle it
+    }
   }
 
   Future<void> updateZone(Zone zone) async {
-    final apiClient = ref.read(apiClientProvider);
-    await apiClient.updateZone(zone);
-    // Refresh the zones list
-    await refresh();
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      await apiClient.updateZone(zone);
+      // Refresh the zones list
+      await refresh();
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      throw e;
+    }
   }
 } 
