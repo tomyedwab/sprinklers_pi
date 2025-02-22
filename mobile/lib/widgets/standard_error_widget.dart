@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import '../theme/spacing.dart';
 
 /// Type of error to display
 enum ErrorType {
@@ -13,6 +15,9 @@ enum ErrorType {
 
   /// Generic errors
   generic,
+
+  /// Success type
+  success,
 }
 
 /// A standardized widget for displaying errors
@@ -59,6 +64,8 @@ class StandardErrorWidget extends StatelessWidget {
         return Icons.lock;
       case ErrorType.generic:
         return Icons.warning;
+      case ErrorType.success:
+        return Icons.check_circle;
     }
   }
 
@@ -72,20 +79,36 @@ class StandardErrorWidget extends StatelessWidget {
         return 'Request Access';
       case ErrorType.generic:
         return 'OK';
+      case ErrorType.success:
+        return 'OK';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
+
+    final colors = switch (type) {
+      ErrorType.success => (
+        container: theme.colorScheme.primaryContainer,
+        foreground: theme.colorScheme.primary,
+        border: theme.colorScheme.primary,
+      ),
+      _ => (
+        container: theme.colorScheme.errorContainer,
+        foreground: theme.colorScheme.error,
+        border: theme.colorScheme.errorContainer,
+      ),
+    };
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: colors.container.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(Spacing.xs),
         border: Border.all(
-          color: theme.colorScheme.errorContainer,
+          color: colors.border,
           width: 1,
         ),
       ),
@@ -94,19 +117,19 @@ class StandardErrorWidget extends StatelessWidget {
         children: [
           Icon(
             _errorIcon,
-            size: 32,
-            color: theme.colorScheme.error,
+            size: Spacing.xl,
+            color: colors.foreground,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: Spacing.sm),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.error,
+            style: appTheme.statusTextStyle.copyWith(
+              color: colors.foreground,
             ),
           ),
           if (showRetry || primaryActionText != null || secondaryActionText != null)
-            const SizedBox(height: 16),
+            SizedBox(height: Spacing.md),
           if (showRetry || primaryActionText != null || secondaryActionText != null)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -114,15 +137,26 @@ class StandardErrorWidget extends StatelessWidget {
                 if (secondaryActionText != null)
                   TextButton(
                     onPressed: onSecondaryAction,
-                    child: Text(secondaryActionText!),
+                    child: Text(
+                      secondaryActionText!,
+                      style: appTheme.subtitleTextStyle,
+                    ),
                   ),
                 if (secondaryActionText != null && (showRetry || primaryActionText != null))
-                  const SizedBox(width: 8),
+                  SizedBox(width: Spacing.xs),
                 if (showRetry || primaryActionText != null)
                   FilledButton.icon(
                     onPressed: onPrimaryAction,
-                    icon: Icon(showRetry ? Icons.refresh : null),
-                    label: Text(primaryActionText ?? _defaultPrimaryAction),
+                    icon: Icon(
+                      showRetry ? Icons.refresh : null,
+                      size: Spacing.md,
+                    ),
+                    label: Text(
+                      primaryActionText ?? _defaultPrimaryAction,
+                      style: appTheme.valueTextStyle.copyWith(
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                    ),
                   ),
               ],
             ),

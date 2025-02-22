@@ -1,55 +1,5 @@
 # Mobile App Bug Tracker
 
-## Settings Screen Issues
-
-### Critical Issues
-
-1. **Potential Memory Leak in Form Controllers**
-   - Form controllers are initialized in `initState` but listeners are never removed
-   - Each controller's listener adds to `_hasUnsavedChanges` state
-   - Should remove listeners in dispose method to prevent memory leaks
-   - Add `removeListener(_onFormChanged)` for each controller in dispose
-
-2. **Race Condition in Settings Update**
-   - `ref.listen` updates form when settings change but doesn't check if user has unsaved changes
-   - Could overwrite user's unsaved changes if settings are refreshed
-   - Should prompt user before overwriting unsaved changes
-   - Consider tracking original and current values separately
-
-### Moderate Issues
-
-4. **Inconsistent Error Handling**
-   - Form validation errors show in SnackBar
-   - Save errors show in SnackBar with retry
-   - Network errors show in StandardErrorWidget
-   - Should standardize error presentation across the screen
-
-5. **State Management Complexity**
-   - Both local state (`_hasUnsavedChanges`) and form controllers are used
-   - Settings are stored in provider but also cached in form
-   - Complex interaction between form state and provider state
-   - Consider using FormProvider or similar to simplify state management
-
-6. **Logout Flow Issues**
-   - Cookie deletion and settings reset could fail independently
-   - No error handling for cookie deletion
-   - Navigation happens after async operations without mounted check
-   - Should handle errors and ensure proper cleanup order
-
-7. **Theme Usage Inconsistency**
-   - Direct theme color access scattered throughout the code
-   - Some colors hardcoded (e.g., Colors.white in logout button)
-   - Inconsistent use of opacity values
-   - Should extract theme values to constants or theme extension
-
-### Potential Improvements
-
-12. **Loading State Enhancement**
-    - Skeleton loading doesn't match final layout exactly
-    - No loading indicator during save operation
-    - No partial form disable during operations
-    - Consider more granular loading states
-
 ## Diagnostics Screen Issues
 
 ### Critical Issues
