@@ -39,7 +39,7 @@ class ScheduleListNotifier extends _$ScheduleListNotifier {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: false)
 Future<ScheduleDetail> scheduleDetails(
   ScheduleDetailsRef ref,
   int id,

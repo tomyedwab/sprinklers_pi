@@ -36,6 +36,12 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
   late List<ScheduleTime> _times;
   late List<ScheduleZone> _zones;
 
+  // Validation state
+  String? _nameError;
+  String? _daysError;
+  String? _timesError;
+  bool _isValid = true;
+
   // Track original state for change detection
   late final String _originalName;
   late final bool _originalEnabled;
@@ -168,16 +174,109 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
       _originalTimes = [const ScheduleTime(time: '06:00', isEnabled: true)];
       _originalZones = [];
     }
+
+    // Add listener for real-time validation
+    _nameController.addListener(_validateName);
   }
 
   @override
   void dispose() {
+    _nameController.removeListener(_validateName);
     _nameController.dispose();
     super.dispose();
   }
 
+  void _validateName() {
+    setState(() {
+      if (_nameController.text.isEmpty) {
+        _nameError = 'Please enter a schedule name';
+      } else if (_nameController.text.length > 19) {
+        _nameError = 'Schedule name must be 19 characters or less';
+      } else {
+        _nameError = null;
+      }
+      _validateForm();
+    });
+  }
+
+  void _validateDays() {
+    setState(() {
+      if (_isDayBased && !_isSundayEnabled && !_isMondayEnabled && 
+          !_isTuesdayEnabled && !_isWednesdayEnabled && !_isThursdayEnabled && 
+          !_isFridayEnabled && !_isSaturdayEnabled) {
+        _daysError = 'Please select at least one day';
+      } else {
+        _daysError = null;
+      }
+      _validateForm();
+    });
+  }
+
+  void _validateTimes() {
+    setState(() {
+      if (_times.isEmpty) {
+        _timesError = 'Please add at least one start time';
+      } else {
+        // Check for overlapping times
+        final sortedTimes = List<ScheduleTime>.from(_times)
+          ..sort((a, b) => a.time.compareTo(b.time));
+        
+        for (var i = 0; i < sortedTimes.length - 1; i++) {
+          final currentTime = _parseTime(sortedTimes[i].time);
+          final nextTime = _parseTime(sortedTimes[i + 1].time);
+          
+          // Calculate total minutes for each schedule
+          final currentEndMinutes = currentTime + _calculateTotalDuration();
+          
+          if (currentEndMinutes > nextTime) {
+            _timesError = 'Schedule times overlap';
+            break;
+          } else {
+            _timesError = null;
+          }
+        }
+      }
+      _validateForm();
+    });
+  }
+
+  int _parseTime(String time) {
+    final parts = time.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  int _calculateTotalDuration() {
+    return _zones.where((z) => z.isEnabled).fold(0, (sum, zone) => sum + zone.duration);
+  }
+
+  void _validateForm() {
+    setState(() {
+      _isValid = _nameError == null && _daysError == null && _timesError == null;
+    });
+  }
+
+  void _onDayChanged() {
+    _validateDays();
+  }
+
+  void _onTimeChanged() {
+    _validateTimes();
+  }
+
   Future<void> _save() async {
-    if (!_validateForm()) return;
+    _validateName();
+    _validateDays();
+    _validateTimes();
+
+    if (!_isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_nameError ?? _daysError ?? _timesError ?? 'Please fix validation errors'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
 
     // Clean up zones:
     // - Set disabled zones to zero duration
@@ -234,41 +333,6 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
         );
       }
     }
-  }
-
-  bool _validateForm() {
-    String? errorMessage;
-
-    if (_nameController.text.isEmpty) {
-      errorMessage = 'Please enter a schedule name';
-    } else if (_nameController.text.length > 19) {
-      errorMessage = 'Schedule name must be 19 characters or less';
-    } else if (_isDayBased && !_isSundayEnabled && !_isMondayEnabled && 
-        !_isTuesdayEnabled && !_isWednesdayEnabled && !_isThursdayEnabled && 
-        !_isFridayEnabled && !_isSaturdayEnabled) {
-      errorMessage = 'Please select at least one day';
-    } else if (_times.isEmpty) {
-      errorMessage = 'Please add at least one start time';
-    } else if (!_zones.any((z) => z.isEnabled && z.duration > 0)) {
-      errorMessage = 'Please enable at least one zone with a duration greater than 0';
-    }
-
-    if (errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: StandardErrorWidget(
-            message: errorMessage,
-            type: ErrorType.validation,
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return false;
-    }
-
-    return true;
   }
 
   @override
@@ -368,9 +432,11 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
             // Basic Settings
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Schedule Name',
+                errorText: _nameError,
                 helperText: 'Maximum 19 characters',
+                counterText: '${_nameController.text.length}/19',
               ),
               maxLength: 19,
             ),
@@ -443,13 +509,29 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                     if (_isDayBased) ...[
                       Text('Days', style: theme.textTheme.titleSmall),
                       const SizedBox(height: 8),
+                      if (_daysError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            _daysError!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
                       Wrap(
                         spacing: 8,
                         children: [
                           FilterChip(
                             label: const Text('Sun'),
                             selected: _isSundayEnabled,
-                            onSelected: (value) => setState(() => _isSundayEnabled = value),
+                            onSelected: (value) {
+                              setState(() {
+                                _isSundayEnabled = value;
+                                _onDayChanged();
+                              });
+                            },
                             selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                             labelStyle: TextStyle(
                               color: _isSundayEnabled 
@@ -460,7 +542,12 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                           FilterChip(
                             label: const Text('Mon'),
                             selected: _isMondayEnabled,
-                            onSelected: (value) => setState(() => _isMondayEnabled = value),
+                            onSelected: (value) {
+                              setState(() {
+                                _isMondayEnabled = value;
+                                _onDayChanged();
+                              });
+                            },
                             selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                             labelStyle: TextStyle(
                               color: _isMondayEnabled 
@@ -471,7 +558,12 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                           FilterChip(
                             label: const Text('Tue'),
                             selected: _isTuesdayEnabled,
-                            onSelected: (value) => setState(() => _isTuesdayEnabled = value),
+                            onSelected: (value) {
+                              setState(() {
+                                _isTuesdayEnabled = value;
+                                _onDayChanged();
+                              });
+                            },
                             selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                             labelStyle: TextStyle(
                               color: _isTuesdayEnabled 
@@ -482,7 +574,12 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                           FilterChip(
                             label: const Text('Wed'),
                             selected: _isWednesdayEnabled,
-                            onSelected: (value) => setState(() => _isWednesdayEnabled = value),
+                            onSelected: (value) {
+                              setState(() {
+                                _isWednesdayEnabled = value;
+                                _onDayChanged();
+                              });
+                            },
                             selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                             labelStyle: TextStyle(
                               color: _isWednesdayEnabled 
@@ -493,7 +590,12 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                           FilterChip(
                             label: const Text('Thu'),
                             selected: _isThursdayEnabled,
-                            onSelected: (value) => setState(() => _isThursdayEnabled = value),
+                            onSelected: (value) {
+                              setState(() {
+                                _isThursdayEnabled = value;
+                                _onDayChanged();
+                              });
+                            },
                             selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                             labelStyle: TextStyle(
                               color: _isThursdayEnabled 
@@ -504,7 +606,12 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                           FilterChip(
                             label: const Text('Fri'),
                             selected: _isFridayEnabled,
-                            onSelected: (value) => setState(() => _isFridayEnabled = value),
+                            onSelected: (value) {
+                              setState(() {
+                                _isFridayEnabled = value;
+                                _onDayChanged();
+                              });
+                            },
                             selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                             labelStyle: TextStyle(
                               color: _isFridayEnabled 
@@ -515,7 +622,12 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                           FilterChip(
                             label: const Text('Sat'),
                             selected: _isSaturdayEnabled,
-                            onSelected: (value) => setState(() => _isSaturdayEnabled = value),
+                            onSelected: (value) {
+                              setState(() {
+                                _isSaturdayEnabled = value;
+                                _onDayChanged();
+                              });
+                            },
                             selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                             labelStyle: TextStyle(
                               color: _isSaturdayEnabled 
@@ -609,88 +721,91 @@ class _ScheduleEditModalState extends ConsumerState<ScheduleEditModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Start Times', style: theme.textTheme.titleMedium),
-                        if (_times.length < 3)
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: () => setState(() {
-                              _times.add(const ScheduleTime(
-                                time: '06:00',
-                                isEnabled: true,
-                              ));
-                            }),
+                        Text(
+                          'Start Times',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(width: 8),
+                        if (_timesError != null)
+                          Text(
+                            _timesError!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    if (_times.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Center(
-                          child: Text(
-                            'Add a start time',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.textTheme.bodySmall?.color,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      ..._times.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final time = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextButton(
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _times.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          child: ListTile(
+                            title: Text(_times[index].time),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
                                   onPressed: () async {
-                                    final result = await showTimePicker(
+                                    final time = await showTimePicker(
                                       context: context,
-                                      initialTime: TimeOfDay(
-                                        hour: int.parse(time.time.split(':')[0]),
-                                        minute: int.parse(time.time.split(':')[1]),
+                                      initialTime: TimeOfDay.fromDateTime(
+                                        DateTime.parse('2000-01-01 ${_times[index].time}:00'),
                                       ),
-                                      builder: (context, child) {
-                                        return MediaQuery(
-                                          data: MediaQuery.of(context).copyWith(
-                                            alwaysUse24HourFormat: false,
-                                          ),
-                                          child: child!,
-                                        );
-                                      },
                                     );
-                                    if (result != null) {
+                                    if (time != null && mounted) {
                                       setState(() {
-                                        // Store time in 24-hour format for API
-                                        _times[index] = time.copyWith(
-                                          time: '${result.hour.toString().padLeft(2, '0')}:'
-                                              '${result.minute.toString().padLeft(2, '0')}',
+                                        _times[index] = ScheduleTime(
+                                          time: '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                                          isEnabled: true,
                                         );
+                                        _onTimeChanged();
                                       });
                                     }
                                   },
-                                  child: Text(
-                                    TimeOfDay(
-                                      hour: int.parse(time.time.split(':')[0]),
-                                      minute: int.parse(time.time.split(':')[1]),
-                                    ).format(context),  // This uses the platform's preferred format
-                                  ),
                                 ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () => setState(() {
-                                  _times.removeAt(index);
-                                }),
-                              ),
-                            ],
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    setState(() {
+                                      _times.removeAt(index);
+                                      _onTimeChanged();
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         );
-                      }).toList(),
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.add_alarm),
+                        label: const Text('Add Start Time'),
+                        onPressed: () async {
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: const TimeOfDay(hour: 6, minute: 0),
+                          );
+                          if (time != null && mounted) {
+                            setState(() {
+                              _times.add(ScheduleTime(
+                                time: '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                                isEnabled: true,
+                              ));
+                              _onTimeChanged();
+                            });
+                          }
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),

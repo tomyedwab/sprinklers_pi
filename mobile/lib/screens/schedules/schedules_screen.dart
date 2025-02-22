@@ -7,7 +7,34 @@ import '../../widgets/loading_states.dart';
 import '../../widgets/confirmation_dialogs.dart';
 import '../../widgets/standard_error_widget.dart';
 import '../../widgets/zone_toggle_widget.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/spacing.dart';
 import 'widgets/schedule_edit_modal.dart';
+
+/// State for tracking schedule toggle operations
+enum ScheduleToggleState {
+  data,
+  loading,
+  error;
+
+  bool get isLoading => this == ScheduleToggleState.loading;
+  bool get isError => this == ScheduleToggleState.error;
+  bool get isData => this == ScheduleToggleState.data;
+}
+
+/// Provider for managing schedule toggle state
+final scheduleToggleStateProvider = StateNotifierProvider.family<ScheduleToggleStateNotifier, ScheduleToggleState, int>(
+  (ref, scheduleId) => ScheduleToggleStateNotifier(),
+);
+
+/// Notifier for schedule toggle state
+class ScheduleToggleStateNotifier extends StateNotifier<ScheduleToggleState> {
+  ScheduleToggleStateNotifier() : super(ScheduleToggleState.data);
+
+  void startLoading() => state = ScheduleToggleState.loading;
+  void setSuccess() => state = ScheduleToggleState.data;
+  void setError() => state = ScheduleToggleState.error;
+}
 
 class SchedulesScreen extends ConsumerWidget {
   const SchedulesScreen({super.key});
@@ -31,9 +58,9 @@ class SchedulesScreen extends ConsumerWidget {
         data: (schedules) => schedules.isEmpty
             ? const _EmptyScheduleList()
             : ListView.separated(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(Spacing.md),
                 itemCount: schedules.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                separatorBuilder: (context, index) => SizedBox(height: Spacing.xs),
                 itemBuilder: (context, index) => _ScheduleListCard(
                   schedule: schedules[index],
                   onEdit: () async {
@@ -81,10 +108,10 @@ class SchedulesScreen extends ConsumerWidget {
                 ),
               ),
         loading: () => ListView.builder(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(Spacing.md),
           itemCount: 3,
           itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
+            padding: EdgeInsets.only(bottom: Spacing.md),
             child: SkeletonCard(
               height: 80,
               showHeader: false,
@@ -140,10 +167,11 @@ class _ScheduleListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -158,18 +186,18 @@ class _ScheduleListCard extends StatelessWidget {
                           Icon(
                             Icons.schedule,
                             size: 20,
-                            color: Colors.blue,
+                            color: appTheme.scheduleIconColor,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: Spacing.xs),
                           Expanded(
                             child: Text(
                               schedule.name,
-                              style: theme.textTheme.titleMedium,
+                              style: appTheme.cardTitleStyle,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: Spacing.unit),
                       Consumer(
                         builder: (context, ref, child) {
                           final detailsAsync = ref.watch(
@@ -188,76 +216,70 @@ class _ScheduleListCard extends StatelessWidget {
                                         ? Icons.calendar_today 
                                         : Icons.repeat,
                                       size: 16,
-                                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      color: appTheme.mutedTextColor,
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: Spacing.xs),
                                     Expanded(
                                       child: Text(
                                         details.type == ScheduleType.dayBased
                                           ? _formatDays(details.days)
                                           : 'Every ${details.interval} day${details.interval > 1 ? 's' : ''}',
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.onSurface.withOpacity(0.7),
-                                        ),
+                                        style: appTheme.subtitleTextStyle,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
+                                SizedBox(height: Spacing.unit),
                                 // Start times
                                 Row(
                                   children: [
                                     Icon(
                                       Icons.schedule,
                                       size: 16,
-                                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      color: appTheme.mutedTextColor,
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: Spacing.xs),
                                     Expanded(
                                       child: Text(
                                         _formatTimes(context, details.times),
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.onSurface.withOpacity(0.7),
-                                        ),
+                                        style: appTheme.subtitleTextStyle,
                                       ),
                                     ),
                                   ],
                                 ),
                                 if (schedule.formattedNextRun != null) ...[
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: Spacing.unit),
                                   // Next run time
                                   Row(
                                     children: [
                                       Icon(
                                         Icons.update,
                                         size: 16,
-                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                        color: appTheme.mutedTextColor,
                                       ),
-                                      const SizedBox(width: 8),
+                                      SizedBox(width: Spacing.xs),
                                       Text(
                                         'Next run: ${schedule.formattedNextRun}',
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.onSurface.withOpacity(0.7),
-                                        ),
+                                        style: appTheme.subtitleTextStyle,
                                       ),
                                     ],
                                   ),
                                 ],
                                 if (details.isWeatherAdjusted) ...[
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: Spacing.unit),
                                   // Weather adjust indicator
                                   Row(
                                     children: [
                                       Icon(
                                         Icons.water_drop,
                                         size: 16,
-                                        color: theme.colorScheme.primary.withOpacity(0.7),
+                                        color: appTheme.weatherIconColor.withOpacity(0.7),
                                       ),
-                                      const SizedBox(width: 8),
+                                      SizedBox(width: Spacing.xs),
                                       Text(
                                         'Weather adjusted',
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.primary.withOpacity(0.7),
+                                        style: appTheme.subtitleTextStyle.copyWith(
+                                          color: appTheme.weatherIconColor.withOpacity(0.7),
                                         ),
                                       ),
                                     ],
@@ -273,7 +295,7 @@ class _ScheduleListCard extends StatelessWidget {
                             ),
                             error: (_, __) => Text(
                               'Error loading schedule details',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: appTheme.statusTextStyle.copyWith(
                                 color: theme.colorScheme.error,
                               ),
                             ),
@@ -286,17 +308,82 @@ class _ScheduleListCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Switch(
-                      value: schedule.isEnabled,
-                      onChanged: onToggle,
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final toggleState = ref.watch(scheduleToggleStateProvider(schedule.id));
+                        
+                        if (toggleState.isLoading) {
+                          return const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        }
+                        
+                        if (toggleState.isError) {
+                          return Switch(
+                            value: schedule.isEnabled,
+                            onChanged: null,
+                          );
+                        }
+                        
+                        return Switch(
+                          value: schedule.isEnabled,
+                          onChanged: (enabled) async {
+                            try {
+                              ref.read(scheduleToggleStateProvider(schedule.id).notifier).startLoading();
+                              final details = await ref
+                                  .read(scheduleListNotifierProvider.notifier)
+                                  .getScheduleDetails(schedule.id);
+                              await ref
+                                  .read(scheduleListNotifierProvider.notifier)
+                                  .saveSchedule(details.copyWith(isEnabled: enabled));
+                              if (context.mounted) {
+                                ref.read(scheduleToggleStateProvider(schedule.id).notifier).setSuccess();
+                                onToggle(enabled);
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ref.read(scheduleToggleStateProvider(schedule.id).notifier).setError();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Failed to update schedule: $e',
+                                      style: appTheme.statusTextStyle,
+                                    ),
+                                    backgroundColor: theme.colorScheme.error,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        );
+                      },
                     ),
-                    IconButton(
-                      icon: Icon(Icons.edit, color: theme.colorScheme.secondary),
-                      onPressed: onEdit,
+                    Padding(
+                      padding: EdgeInsets.all(Spacing.unit),
+                      child: IconButton.filled(
+                        icon: Icon(
+                          Icons.edit,
+                          color: theme.colorScheme.surface,
+                        ),
+                        onPressed: onEdit,
+                      ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                      onPressed: onDelete,
+                    Padding(
+                      padding: EdgeInsets.all(Spacing.unit),
+                      child: IconButton.filled(
+                        icon: Icon(
+                          Icons.delete,
+                          color: theme.colorScheme.surface,
+                        ),
+                        onPressed: onDelete,
+                        style: IconButton.styleFrom(
+                          backgroundColor: appTheme.disabledStateColor,
+                        ),
+                      ),
                     ),
                   ],
                 ),
