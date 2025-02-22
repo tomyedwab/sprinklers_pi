@@ -7,7 +7,6 @@ import '../../providers/system_state_provider.dart';
 import '../../widgets/active_zone_card.dart';
 import '../../widgets/upcoming_schedules_card.dart';
 import '../../widgets/weather_card.dart';
-import '../../widgets/skeleton_card.dart';
 import '../../theme/spacing.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -115,15 +114,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               padding: Spacing.screenPaddingAll,
               child: Column(
                 children: [
-                  SkeletonCard(
-                    isLoading: isLoading,
-                    child: const ActiveZoneCard(),
-                  ),
+                  const ActiveZoneCard(),
                   SizedBox(height: Spacing.cardSpacing),
-                  SkeletonCard(
-                    isLoading: isLoading,
-                    child: const WeatherCard(),
-                  ),
+                  const WeatherCard(),
                 ],
               ),
             ),
@@ -135,10 +128,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               padding: Spacing.screenPaddingAll,
               child: Column(
                 children: [
-                  SkeletonCard(
-                    isLoading: isLoading,
-                    child: const UpcomingSchedulesCard(),
-                  ),
+                  const UpcomingSchedulesCard(),
                 ],
               ),
             ),
@@ -150,20 +140,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return ListView(
       padding: Spacing.screenPaddingAll,
       children: [
-        SkeletonCard(
-          isLoading: isLoading,
-          child: const ActiveZoneCard(),
-        ),
+        const ActiveZoneCard(),
         SizedBox(height: Spacing.cardSpacing),
-        SkeletonCard(
-          isLoading: isLoading,
-          child: const UpcomingSchedulesCard(),
-        ),
+        const UpcomingSchedulesCard(),
         SizedBox(height: Spacing.cardSpacing),
-        SkeletonCard(
-          isLoading: isLoading,
-          child: const WeatherCard(),
-        ),
+        const WeatherCard(),
       ],
     );
   }

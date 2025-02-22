@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/connection_settings.dart';
 import '../../providers/connection_settings_provider.dart';
 import '../../api/api_client.dart';
 import '../../api/api_config.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/message_card.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/spacing.dart';
 
 class ConnectionSettingsScreen extends ConsumerStatefulWidget {
   /// If true, this screen was shown due to a connection error
@@ -144,10 +148,29 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
     );
   }
 
+  Future<void> _openDocumentation() async {
+    final docUrl = Uri.parse('https://github.com/rszimm/sprinklers_pi/wiki');
+    try {
+      await launchUrl(
+        docUrl,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not open documentation: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(connectionSettingsProvider);
     final theme = Theme.of(context);
+    final appTheme = AppTheme.of(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
@@ -155,120 +178,55 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
         backgroundColor: theme.colorScheme.surface,
         title: Text(
           'Connection Settings',
-          style: theme.textTheme.titleLarge,
+          style: appTheme.cardTitleStyle,
         ),
         elevation: 2,
-        // Only show back button if this wasn't opened due to an error
         automaticallyImplyLeading: !widget.isError,
       ),
       body: settingsAsync.when(
         data: (settings) => Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: Spacing.screenPaddingAll,
             children: [
               if (widget.isError && settings.baseUrl.isNotEmpty) ...[
-                Card(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.error,
-                          theme.colorScheme.error.withOpacity(0.8),
-                        ],
-                      ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Icon(Icons.error_outline, color: Colors.white, size: 48),
-                          SizedBox(height: 16),
-                          Text(
-                            'Connection Error',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Please check your connection settings and ensure the Sprinklers Pi server is running.',
-                            style: TextStyle(color: Colors.white),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                MessageCard(
+                  icon: Icons.error_outline,
+                  title: 'Connection Error',
+                  message: 'Please check your connection settings and ensure the Sprinklers Pi server is running.',
+                  primaryColor: theme.colorScheme.error,
+                  textColor: Colors.white,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: Spacing.md),
               ] else if (settings.baseUrl.isEmpty) ...[
-                Card(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withOpacity(0.8),
-                        ],
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.wifi_find,
-                            color: theme.colorScheme.surface,
-                            size: 48,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Welcome to Sprinklers Pi',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.surface,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Please enter the URL of your Sprinklers Pi server to get started.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.surface,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                MessageCard(
+                  icon: Icons.wifi_find,
+                  title: 'Welcome to Sprinklers Pi',
+                  message: 'Please enter the URL of your Sprinklers Pi server to get started. Check the documentation for help with server setup.',
+                  primaryColor: theme.colorScheme.primary,
+                  docLink: 'https://github.com/rszimm/sprinklers_pi/wiki',
+                  onDocLinkTap: _openDocumentation,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: Spacing.md),
               ],
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: Spacing.cardPaddingAll,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Server Connection',
-                        style: theme.textTheme.titleLarge,
+                        style: appTheme.cardTitleStyle,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: Spacing.md),
                       TextFormField(
                         controller: _urlController,
                         decoration: InputDecoration(
                           labelText: 'Server URL',
                           hintText: 'http://192.168.1.100:8080',
                           helperText: 'Enter the full URL of your Sprinklers Pi server',
+                          helperStyle: appTheme.subtitleTextStyle,
                           border: const OutlineInputBorder(),
                           labelStyle: TextStyle(color: theme.colorScheme.secondary),
                           focusedBorder: OutlineInputBorder(
@@ -283,16 +241,16 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
                         autocorrect: false,
                         keyboardType: TextInputType.url,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: Spacing.md),
                       FilledButton(
                         onPressed: _isValidating ? null : _saveSettings,
                         style: FilledButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
+                          minimumSize: Size(double.infinity, Spacing.xxl),
                         ),
                         child: _isValidating
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
+                            ? SizedBox(
+                                height: Spacing.lg,
+                                width: Spacing.lg,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: Colors.white,
@@ -314,29 +272,12 @@ class _ConnectionSettingsScreenState extends ConsumerState<ConnectionSettingsScr
         ),
         error: (error, stack) => Center(
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  color: theme.colorScheme.error,
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error Loading Settings',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.error,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: theme.textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            padding: Spacing.screenPaddingAll,
+            child: MessageCard(
+              icon: Icons.error_outline,
+              title: 'Error Loading Settings',
+              message: error.toString(),
+              primaryColor: theme.colorScheme.error,
             ),
           ),
         ),
