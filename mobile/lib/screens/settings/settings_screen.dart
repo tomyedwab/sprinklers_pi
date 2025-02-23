@@ -478,9 +478,6 @@ class SettingsScreen extends ConsumerWidget {
 
         if (!context.mounted) return;
 
-        // Show the connection settings screen
-        final router = Router.of(context).routerDelegate as AppRouterDelegate;
-        router.showConnectionSettings();
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

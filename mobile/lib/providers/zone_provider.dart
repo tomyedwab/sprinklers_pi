@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../api/models/zone.dart';
 import 'api_provider.dart';
+
 part 'zone_provider.g.dart';
 
 @riverpod

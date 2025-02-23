@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_cookie_jar/webview_cookie_jar.dart';
-import '../../providers/auth_provider.dart';
+import '../../providers/connection_state_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -18,12 +18,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   void initState() {
     super.initState();
-    final redirectUrl = ref.read(authProvider.notifier).pendingRedirect;
+    final redirectUrl = ref.read(connectionStateProvider).authRedirectUrl;
     if (redirectUrl == null) {
-      // If there's no redirect URL, close the screen
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(authProvider.notifier).hideAuthScreen(context);
-      });
       return;
     }
 
@@ -39,7 +35,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             final cookies = await WebViewCookieJar.cookieJar.loadForRequest(Uri.parse(url));
             final hasSessionToken = cookies.any((cookie) => cookie.name == 'session-token');
             if (hasSessionToken) {
-              ref.read(authProvider.notifier).hideAuthScreen(context);
+              ref.read(connectionStateProvider.notifier).reset();
             }
           },
         ),
@@ -62,7 +58,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () {
-              ref.read(authProvider.notifier).hideAuthScreen(context);
+              ref.read(connectionStateProvider.notifier).reset();
             },
           ),
         ),

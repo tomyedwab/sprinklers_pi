@@ -39,8 +39,8 @@ class ApiClient {
   final http.Client _client;
 
   // Default retry configuration
-  static const int _maxRetries = 3;
-  static const Duration _initialRetryDelay = Duration(seconds: 1);
+  static const int _maxRetries = 6;
+  static const Duration _initialRetryDelay = Duration(seconds: 10);
   static const double _backoffFactor = 1.5;
 
   // Set of endpoints that are safe to retry (idempotent operations)
@@ -173,6 +173,7 @@ class ApiClient {
         // Check if we should retry
         if (retryCount < _maxRetries && 
             (e is TimeoutException || 
+             e is http.ClientException ||
              e is ApiException && e.statusCode != null && e.statusCode! >= 500)) {
           retryCount++;
           final delay = _getRetryDelay(retryCount);

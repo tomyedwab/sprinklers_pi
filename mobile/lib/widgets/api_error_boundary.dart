@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/connection_error_provider.dart';
+import '../providers/connection_state_provider.dart';
 
 /// A widget that catches API errors and shows the connection settings screen
 /// when needed
@@ -24,8 +24,7 @@ class _ApiErrorBoundaryState extends ConsumerState<ApiErrorBoundary> {
     FlutterError.onError = (FlutterErrorDetails details) {
       // Handle the error after the frame is done
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(connectionErrorProvider.notifier).handleError(
-          context,
+        ref.read(connectionStateProvider.notifier).handleError(
           details.exception,
         );
       });

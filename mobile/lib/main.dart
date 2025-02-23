@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'navigation/app_router.dart';
 import 'navigation/route_parser.dart';
 import 'widgets/bottom_nav_bar.dart';
-import 'widgets/connection_checker.dart';
 import 'widgets/api_error_boundary.dart';
 import 'theme/theme_config.dart';
 import 'theme/app_theme.dart';
@@ -84,13 +83,11 @@ class MainScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ConnectionChecker(
-      child: ApiErrorBoundary(
-        child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.background,
-          body: child,
-          bottomNavigationBar: const AppBottomNavBar(),
-        ),
+    return ApiErrorBoundary(
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        body: child,
+        bottomNavigationBar: const AppBottomNavBar(),
       ),
     );
   }

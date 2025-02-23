@@ -6,7 +6,7 @@ part of 'log_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$logNotifierHash() => r'a85ec03410ffcd4efde5f81316ea8cb2ce357393';
+String _$logNotifierHash() => r'86e0186941abe1850d61aba5aa73e4e2c8ed4a32';
 
 /// See also [LogNotifier].
 @ProviderFor(LogNotifier)
@@ -21,7 +21,7 @@ final logNotifierProvider = AutoDisposeAsyncNotifierProvider<LogNotifier,
 );
 
 typedef _$LogNotifier = AutoDisposeAsyncNotifier<Map<int, List<GraphPoint>>>;
-String _$tableLogNotifierHash() => r'1ba79a6bfe1d715c5b791f353d40584b1615726b';
+String _$tableLogNotifierHash() => r'edfd25bfae61439959a0492987e6610296699308';
 
 /// See also [TableLogNotifier].
 @ProviderFor(TableLogNotifier)

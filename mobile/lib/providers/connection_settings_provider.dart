@@ -4,18 +4,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/connection_settings.dart';
 import '../api/api_config.dart';
 
-final connectionSettingsProvider = NotifierProvider<ConnectionSettingsNotifier, AsyncValue<ConnectionSettings>>(
+final connectionSettingsProvider = NotifierProvider<ConnectionSettingsNotifier, ConnectionSettings>(
   () => ConnectionSettingsNotifier(),
 );
 
-class ConnectionSettingsNotifier extends Notifier<AsyncValue<ConnectionSettings>> {
+class ConnectionSettingsNotifier extends Notifier<ConnectionSettings> {
   static const _storageKey = 'connection_settings';
 
   @override
-  AsyncValue<ConnectionSettings> build() {
+  ConnectionSettings build() {
     // Start in loading state and immediately load settings
     _loadSettings();
-    return const AsyncValue.loading();
+    return ConnectionSettings.defaultSettings;
   }
 
   Future<void> _loadSettings() async {
@@ -28,34 +28,28 @@ class ConnectionSettingsNotifier extends Notifier<AsyncValue<ConnectionSettings>
             jsonDecode(jsonStr),
           ),
         );
-        state = AsyncValue.data(settings);
+        state = settings;
         if (settings.baseUrl.isNotEmpty) {
           ApiConfig.setBaseUrl(settings.baseUrl);
         }
       } else {
-        state = AsyncValue.data(ConnectionSettings.defaultSettings);
+        state = ConnectionSettings.defaultSettings;
       }
     } catch (e) {
       // If loading fails, use default settings
-      state = AsyncValue.data(ConnectionSettings.defaultSettings);
+      state = ConnectionSettings.defaultSettings;
     }
   }
 
   Future<void> updateSettings(ConnectionSettings settings) async {
-    state = const AsyncValue.loading();
-    try {
-      if (settings.baseUrl.isNotEmpty) {
-        ApiConfig.setBaseUrl(settings.baseUrl);
-      }
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _storageKey,
-        jsonEncode(settings.toJson()),
-      );
-      state = AsyncValue.data(settings);
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      rethrow;
+    if (settings.baseUrl.isNotEmpty) {
+      ApiConfig.setBaseUrl(settings.baseUrl);
     }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _storageKey,
+      jsonEncode(settings.toJson()),
+    );
+    state = settings;
   }
 } 

@@ -43,22 +43,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
   }
 
-  void _showError(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        duration: const Duration(seconds: 3),
-        action: SnackBarAction(
-          label: 'Retry',
-          textColor: Theme.of(context).colorScheme.onError,
-          onPressed: _refreshData,
-        ),
-      ),
-    );
-  }
-
   Future<void> _refreshData() async {
     if (_isRefreshing) return;
     
@@ -66,27 +50,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       _isRefreshing = true;
     });
 
-    try {
-      final systemStateNotifier = ref.read(systemStateNotifierProvider.notifier);
-      final zonesNotifier = ref.read(zonesNotifierProvider.notifier);
+    final systemStateNotifier = ref.read(systemStateNotifierProvider.notifier);
+    final zonesNotifier = ref.read(zonesNotifierProvider.notifier);
 
-      // Refresh system state
-      try {
-        await systemStateNotifier.refresh();
-      } catch (e) {
-        _showError('Failed to refresh system state');
-      }
-
-      // Refresh zones
-      try {
-        await zonesNotifier.refresh();
-      } catch (e) {
-        _showError('Failed to refresh zones');
-      }
-    } catch (e) {
-      // Handle unexpected errors
-      _showError('Failed to refresh dashboard');
-    }
+    // Refresh system state
+    await systemStateNotifier.refresh();
+    await zonesNotifier.refresh();
 
     if (mounted) {
       setState(() {
